@@ -1,0 +1,41 @@
+{
+  "name": "Quote",
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "description": "Quote text"
+    },
+    "arabic_text": {
+      "type": "string",
+      "description": "Arabic text if applicable"
+    },
+    "source": {
+      "type": "string",
+      "description": "Source (Quran, Hadith, Scholar)"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Specific reference (Surah:Ayah, Book:Hadith number)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "quran",
+        "hadith",
+        "scholar",
+        "wisdom"
+      ],
+      "description": "Type of quote"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "text",
+    "source",
+    "type"
+  ]
+}

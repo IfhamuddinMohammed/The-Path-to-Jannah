@@ -1,0 +1,22 @@
+{
+  "name": "RomanUrduSurah",
+  "type": "object",
+  "properties": {
+    "surah_number": {
+      "type": "number",
+      "description": "The surah number (1-114)"
+    },
+    "surah_name": {
+      "type": "string",
+      "description": "The name of the surah"
+    },
+    "verses_data": {
+      "type": "string",
+      "description": "JSON string of array: [{ayah: number, roman_urdu: string}]"
+    }
+  },
+  "required": [
+    "surah_number",
+    "verses_data"
+  ]
+}

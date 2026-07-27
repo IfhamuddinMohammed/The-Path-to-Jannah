@@ -1,0 +1,50 @@
+{
+  "name": "Dua",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Dua title"
+    },
+    "arabic_text": {
+      "type": "string",
+      "description": "Dua in Arabic"
+    },
+    "transliteration": {
+      "type": "string",
+      "description": "Roman English transliteration"
+    },
+    "translation": {
+      "type": "string",
+      "description": "English translation"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "evening",
+        "travel",
+        "protection",
+        "eating",
+        "sleeping",
+        "prayer",
+        "general"
+      ],
+      "description": "Dua category"
+    },
+    "hadith_reference": {
+      "type": "string",
+      "description": "Hadith reference if applicable"
+    },
+    "benefits": {
+      "type": "string",
+      "description": "Benefits and significance"
+    }
+  },
+  "required": [
+    "title",
+    "arabic_text",
+    "translation",
+    "category"
+  ]
+}

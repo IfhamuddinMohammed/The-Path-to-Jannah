@@ -1,0 +1,62 @@
+{
+  "name": "Hadith",
+  "type": "object",
+  "properties": {
+    "collection": {
+      "type": "string",
+      "enum": [
+        "Sahih al-Bukhari",
+        "Sahih Muslim",
+        "Sunan an-Nasa'i",
+        "Sunan Abi Dawood",
+        "Jami` at-Tirmidhi",
+        "Sunan Ibn Majah",
+        "Riyad as-Salihin"
+      ],
+      "description": "The collection the Hadith belongs to"
+    },
+    "book": {
+      "type": "string",
+      "description": "The book or chapter within the collection"
+    },
+    "hadith_number": {
+      "type": "string",
+      "description": "The number of the Hadith in the collection"
+    },
+    "narrator": {
+      "type": "string",
+      "description": "The narrator of the Hadith"
+    },
+    "arabic_text": {
+      "type": "string",
+      "description": "The Hadith text in Arabic"
+    },
+    "english_text": {
+      "type": "string",
+      "description": "The English translation of the Hadith"
+    },
+    "topic": {
+      "type": "string",
+      "enum": [
+        "faith",
+        "prayer",
+        "charity",
+        "fasting",
+        "pilgrimage",
+        "family",
+        "akhlaq",
+        "knowledge",
+        "quran",
+        "repentance"
+      ],
+      "description": "The main topic of the Hadith"
+    }
+  },
+  "required": [
+    "collection",
+    "book",
+    "arabic_text",
+    "english_text",
+    "topic"
+  ]
+}

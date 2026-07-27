@@ -1,0 +1,62 @@
+{
+  "name": "Video",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Video title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Video description"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "Video URL (YouTube, etc.)"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Video thumbnail URL"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "lecture",
+        "reminder",
+        "documentary",
+        "quran",
+        "hadith",
+        "sunnah"
+      ],
+      "description": "Video category"
+    },
+    "scholar": {
+      "type": "string",
+      "description": "Scholar or speaker name"
+    },
+    "duration": {
+      "type": "string",
+      "description": "Video duration"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "arabic",
+        "english",
+        "urdu",
+        "other"
+      ],
+      "default": "english",
+      "description": "Video language"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "video_url",
+    "category"
+  ]
+}

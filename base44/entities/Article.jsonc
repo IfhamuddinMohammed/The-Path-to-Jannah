@@ -1,0 +1,60 @@
+{
+  "name": "Article",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Article title"
+    },
+    "content": {
+      "type": "string",
+      "description": "Article content in markdown format"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "guidance",
+        "prophets",
+        "sahaba",
+        "morals",
+        "akhlaq",
+        "repentance",
+        "sunnah-habits",
+        "family-parenting",
+        "youth-corner",
+        "charity",
+        "self-development",
+        "consequences",
+        "rewards",
+        "respect",
+        "daily-life"
+      ],
+      "description": "Article category"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Article tags"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether article is featured"
+    },
+    "arabic_text": {
+      "type": "string",
+      "description": "Related Arabic text or verse"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Featured image URL"
+    }
+  },
+  "required": [
+    "title",
+    "content",
+    "category"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "FAQ",
+  "type": "object",
+  "properties": {
+    "question": {
+      "type": "string"
+    },
+    "answer": {
+      "type": "string",
+      "description": "Answer in markdown format"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "prayer",
+        "fasting",
+        "family",
+        "finance",
+        "halal-haram",
+        "general"
+      ]
+    },
+    "source_reference": {
+      "type": "string",
+      "description": "Qur'an/Hadith reference for the answer"
+    }
+  },
+  "required": [
+    "question",
+    "answer",
+    "category"
+  ]
+}

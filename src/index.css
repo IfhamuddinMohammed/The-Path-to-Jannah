@@ -4,82 +4,115 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --font-heading: ui-sans-serif, system-ui, sans-serif;
-    --font-body: ui-sans-serif, system-ui, sans-serif;
-    --font-display: ui-sans-serif, system-ui, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Madina Marble — warm creams, soft off-whites, light sand */
+    --background: 40 33% 97%;
+    --foreground: 158 22% 14%;
+    --card: 40 40% 99%;
+    --card-foreground: 158 22% 14%;
+    --popover: 40 40% 99%;
+    --popover-foreground: 158 22% 14%;
+    /* Emerald — deep, rich green for primary states */
+    --primary: 158 42% 20%;
+    --primary-foreground: 40 33% 97%;
+    --secondary: 40 25% 92%;
+    --secondary-foreground: 158 22% 16%;
+    --muted: 40 18% 93%;
+    --muted-foreground: 158 10% 42%;
+    /* Kiswah Gold — rich, muted gold for accents */
+    --accent: 38 44% 48%;
+    --accent-foreground: 158 22% 14%;
+    --destructive: 0 55% 42%;
+    --destructive-foreground: 40 33% 97%;
+    --border: 40 15% 87%;
+    --input: 40 15% 87%;
+    --ring: 38 44% 48%;
+    --chart-1: 158 42% 28%;
+    --chart-2: 38 44% 50%;
+    --chart-3: 200 40% 45%;
+    --chart-4: 28 55% 55%;
+    --chart-5: 0 50% 50%;
+    --radius: 0.625rem;
+
+    /* Typography */
+    --font-heading: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-arabic: 'Amiri', 'Arabic UI Text', serif;
+    --font-mono: ui-monospace, monospace;
+
+    /* Sidebar */
+    --sidebar-background: 40 33% 96%;
+    --sidebar-foreground: 158 22% 18%;
+    --sidebar-primary: 158 42% 22%;
+    --sidebar-primary-foreground: 40 33% 97%;
+    --sidebar-accent: 40 25% 90%;
+    --sidebar-accent-foreground: 158 22% 16%;
+    --sidebar-border: 40 15% 85%;
+    --sidebar-ring: 38 44% 48%;
+
+    /* Custom semantic colors */
+    --gold: 38 44% 48%;
+    --gold-light: 38 50% 62%;
+    --gold-soft: 38 35% 88%;
+    --emerald: 158 42% 20%;
+    --emerald-light: 158 35% 32%;
+    --emerald-glow: 158 48% 42%;
+    --midnight: 210 42% 9%;
+    --midnight-deep: 215 48% 6%;
+    --marble: 40 40% 99%;
+    --marble-warm: 40 28% 94%;
+    --sand: 40 22% 86%;
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Midnight — deep, rich dark palette */
+    --background: 210 38% 7%;
+    --foreground: 40 25% 90%;
+    --card: 210 32% 11%;
+    --card-foreground: 40 25% 90%;
+    --popover: 210 32% 11%;
+    --popover-foreground: 40 25% 90%;
+    --primary: 158 48% 38%;
+    --primary-foreground: 210 38% 7%;
+    --secondary: 210 22% 16%;
+    --secondary-foreground: 40 25% 90%;
+    --muted: 210 22% 15%;
+    --muted-foreground: 40 8% 58%;
+    --accent: 38 46% 55%;
+    --accent-foreground: 210 38% 7%;
+    --destructive: 0 45% 38%;
+    --destructive-foreground: 40 25% 90%;
+    --border: 210 18% 18%;
+    --input: 210 18% 18%;
+    --ring: 38 46% 55%;
+    --chart-1: 158 48% 42%;
+    --chart-2: 38 46% 55%;
+    --chart-3: 200 40% 50%;
+    --chart-4: 28 50% 55%;
+    --chart-5: 0 45% 50%;
+
+    --sidebar-background: 210 38% 8%;
+    --sidebar-foreground: 40 25% 88%;
+    --sidebar-primary: 158 48% 38%;
+    --sidebar-primary-foreground: 210 38% 7%;
+    --sidebar-accent: 210 22% 14%;
+    --sidebar-accent-foreground: 40 25% 88%;
+    --sidebar-border: 210 18% 16%;
+    --sidebar-ring: 38 46% 55%;
+
+    --gold: 38 46% 55%;
+    --gold-light: 38 52% 68%;
+    --gold-soft: 38 25% 18%;
+    --emerald: 158 48% 38%;
+    --emerald-light: 158 42% 48%;
+    --emerald-glow: 158 52% 55%;
+    --midnight: 210 42% 7%;
+    --midnight-deep: 215 48% 4%;
+    --marble: 210 32% 11%;
+    --marble-warm: 210 25% 14%;
+    --sand: 210 20% 16%;
   }
 }
-
-
 
 @layer base {
   * {
@@ -88,5 +121,149 @@
 
   body {
     @apply bg-background text-foreground font-body;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@layer utilities {
+  /* Safe-area utilities for notch / home-indicator support */
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .mt-safe { margin-top: env(safe-area-inset-top); }
+  .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+
+  /* Disable text selection on interactive controls */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* Arabic typography */
+  .arabic-font,
+  .font-arabic {
+    font-family: var(--font-arabic);
+    direction: rtl;
+    line-height: 2;
+  }
+
+  /* Serif display for English titles */
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* Soft, diffused glow shadows — replaces harsh drop shadows */
+  .glow-shadow {
+    box-shadow:
+      0 2px 20px -4px hsl(158 22% 14% / 0.06),
+      0 0 0 1px hsl(40 30% 88% / 0.6);
+  }
+  .dark .glow-shadow {
+    box-shadow:
+      0 2px 24px -4px hsl(0 0% 0% / 0.4),
+      0 0 0 1px hsl(40 25% 90% / 0.04);
+  }
+
+  .glow-shadow-lg {
+    box-shadow:
+      0 8px 40px -8px hsl(158 22% 14% / 0.1),
+      0 0 0 1px hsl(40 30% 88% / 0.5);
+  }
+  .dark .glow-shadow-lg {
+    box-shadow:
+      0 8px 48px -8px hsl(0 0% 0% / 0.5),
+      0 0 0 1px hsl(40 25% 90% / 0.05);
+  }
+
+  /* Gold-tinted glow for premium cards */
+  .glow-gold {
+    box-shadow:
+      0 4px 28px -6px hsl(38 44% 48% / 0.12),
+      0 0 0 1px hsl(38 44% 48% / 0.15);
+  }
+  .dark .glow-gold {
+    box-shadow:
+      0 4px 32px -6px hsl(38 46% 55% / 0.18),
+      0 0 0 1px hsl(38 46% 55% / 0.1);
+  }
+
+  /* Delicate gold border */
+  .gold-border {
+    border: 1px solid hsl(38 44% 48% / 0.22);
+  }
+  .dark .gold-border {
+    border: 1px solid hsl(38 46% 55% / 0.18);
+  }
+
+  /* Gold accent text */
+  .text-gold {
+    color: hsl(var(--gold));
+  }
+  .text-gold-light {
+    color: hsl(var(--gold-light));
+  }
+
+  /* Emerald accent text */
+  .text-emerald-deep {
+    color: hsl(var(--emerald));
+  }
+  .text-emerald-glow {
+    color: hsl(var(--emerald-glow));
+  }
+
+  /* Arch-shaped top — mihrab/dome motif */
+  .arch-top {
+    border-top-left-radius: 50% 24px;
+    border-top-right-radius: 50% 24px;
+  }
+  .arch-top-lg {
+    border-top-left-radius: 50% 40px;
+    border-top-right-radius: 50% 40px;
+  }
+
+  /* Islamic geometric pattern — 8-pointed star (rub el hizb) */
+  .geometric-bg {
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23c9a227' stroke-width='0.5' opacity='0.08'%3E%3Cpath d='M40 8 L46 34 L72 40 L46 46 L40 72 L34 46 L8 40 L34 34 Z'/%3E%3Crect x='20' y='20' width='40' height='40' transform='rotate(45 40 40)'/%3E%3Crect x='20' y='20' width='40' height='40'/%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
+    background-repeat: repeat;
+  }
+  .dark .geometric-bg {
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4af37' stroke-width='0.5' opacity='0.06'%3E%3Cpath d='M40 8 L46 34 L72 40 L46 46 L40 72 L34 46 L8 40 L34 34 Z'/%3E%3Crect x='20' y='20' width='40' height='40' transform='rotate(45 40 40)'/%3E%3Crect x='20' y='20' width='40' height='40'/%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Night-sky gradient — for hero sections */
+  .night-sky {
+    background:
+      radial-gradient(ellipse at 70% 20%, hsl(158 42% 14% / 0.6) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 80%, hsl(210 50% 12% / 0.5) 0%, transparent 50%),
+      linear-gradient(165deg, hsl(215 48% 6%) 0%, hsl(200 42% 9%) 35%, hsl(175 38% 12%) 70%, hsl(158 32% 14%) 100%);
+  }
+
+  /* Warm marble gradient — for section backgrounds */
+  .marble-gradient {
+    background: linear-gradient(135deg, hsl(40 40% 99%) 0%, hsl(40 28% 95%) 50%, hsl(40 22% 92%) 100%);
+  }
+  .dark .marble-gradient {
+    background: linear-gradient(135deg, hsl(210 32% 11%) 0%, hsl(210 28% 9%) 50%, hsl(210 25% 8%) 100%);
+  }
+
+  /* Subtle warm glow for active nav items */
+  .nav-active-glow {
+    box-shadow: 0 0 20px -4px hsl(38 44% 48% / 0.2);
+  }
+}
+
+@layer base {
+  button,
+  [role="button"],
+  nav a,
+  .lucide {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 }

@@ -1,0 +1,57 @@
+{
+  "name": "Quiz",
+  "type": "object",
+  "properties": {
+    "question": {
+      "type": "string",
+      "description": "The quiz question"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Multiple choice options"
+    },
+    "correct_answer": {
+      "type": "string",
+      "description": "The correct answer"
+    },
+    "explanation": {
+      "type": "string",
+      "description": "Explanation of the correct answer"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "quran",
+        "hadith",
+        "prophets",
+        "islamic-history",
+        "fiqh",
+        "general"
+      ],
+      "description": "Quiz category"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "description": "Difficulty level"
+    },
+    "source_reference": {
+      "type": "string",
+      "description": "Reference to Quran/Hadith if applicable"
+    }
+  },
+  "required": [
+    "question",
+    "options",
+    "correct_answer",
+    "category",
+    "difficulty"
+  ]
+}

@@ -2,10 +2,32 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from 'next-themes';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import Layout from './Layout';
+import Home from './pages/Home';
+import Quran from './pages/Quran';
+import Guidance from './pages/Guidance';
+import Hadith from './pages/Hadith';
+import Stories from './pages/Stories';
+import Videos from './pages/Videos';
+import Duas from './pages/Duas';
+import FAQ from './pages/FAQ';
+import Community from './pages/Community';
+import PrayerTimes from './pages/PrayerTimes';
+import Qibla from './pages/Qibla';
+import Names from './pages/Names';
+import Seerah from './pages/Seerah';
+import Quiz from './pages/Quiz';
+import Kids from './pages/Kids';
+import NewMuslims from './pages/NewMuslims';
+import Fiqh from './pages/Fiqh';
+import About from './pages/About';
+import { AdhaanProvider } from '@/hooks/useAdhaan';
+import AdhaanBanner from '@/components/adhaan/AdhaanBanner';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -34,7 +56,28 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/Home" element={<Home />} />
+        <Route path="/Quran" element={<Quran />} />
+        <Route path="/Guidance" element={<Guidance />} />
+        <Route path="/Hadith" element={<Hadith />} />
+        <Route path="/Stories" element={<Stories />} />
+        <Route path="/Videos" element={<Videos />} />
+        <Route path="/Duas" element={<Duas />} />
+        <Route path="/FAQ" element={<FAQ />} />
+        <Route path="/Community" element={<Community />} />
+        <Route path="/PrayerTimes" element={<PrayerTimes />} />
+        <Route path="/Qibla" element={<Qibla />} />
+        <Route path="/Names" element={<Names />} />
+        <Route path="/Seerah" element={<Seerah />} />
+        <Route path="/Quiz" element={<Quiz />} />
+        <Route path="/Kids" element={<Kids />} />
+        <Route path="/NewMuslims" element={<NewMuslims />} />
+        <Route path="/Fiqh" element={<Fiqh />} />
+        <Route path="/About" element={<About />} />
+        {/* Add your page Route elements here */}
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -44,15 +87,20 @@ const AuthenticatedApp = () => {
 function App() {
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <ScrollToTop />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <AdhaanProvider>
+            <Router>
+              <ScrollToTop />
+              <AuthenticatedApp />
+            </Router>
+            <AdhaanBanner />
+          </AdhaanProvider>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

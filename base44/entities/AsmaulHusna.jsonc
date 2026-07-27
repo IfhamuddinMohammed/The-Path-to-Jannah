@@ -1,0 +1,41 @@
+{
+  "name": "AsmaulHusna",
+  "type": "object",
+  "properties": {
+    "name_arabic": {
+      "type": "string",
+      "description": "The name in Arabic"
+    },
+    "name_english": {
+      "type": "string",
+      "description": "The name in English"
+    },
+    "transliteration": {
+      "type": "string",
+      "description": "Roman transliteration"
+    },
+    "meaning": {
+      "type": "string",
+      "description": "English meaning of the name"
+    },
+    "explanation": {
+      "type": "string",
+      "description": "Detailed explanation of the name"
+    },
+    "benefits": {
+      "type": "string",
+      "description": "Spiritual benefits of reciting this name"
+    },
+    "position": {
+      "type": "number",
+      "description": "Position in the 99 names (1-99)"
+    }
+  },
+  "required": [
+    "name_arabic",
+    "name_english",
+    "transliteration",
+    "meaning",
+    "position"
+  ]
+}
