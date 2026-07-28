@@ -25,6 +25,8 @@ jobs:
         run: npm run build
         env:
           BASE44_LEGACY_SDK_IMPORTS: "true"
+          VITE_BASE44_APP_ID: ${{ secrets.VITE_BASE44_APP_ID }}
+          VITE_BASE44_APP_BASE_URL: ${{ secrets.VITE_BASE44_APP_BASE_URL }}
 
       - name: Sync Capacitor Android project
         run: npx cap sync android
