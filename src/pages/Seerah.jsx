@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { SeerahEvent, SeerahLocation, ProphetName, CharacterTrait } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, Calendar, MapPin, BookOpen, Search, Landmark, Building2, Mountain, TreePine, Swords } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SEERAH_TIMELINE, KEY_LOCATIONS, PROPHET_NAMES, CHARACTER_TRAITS } from "@/data/seerahData";
 import EventCard from "@/components/seerah/EventCard";
 import EventDetailDialog from "@/components/seerah/EventDetailDialog";
 import ProphetNameChip from "@/components/seerah/ProphetNameChip";
@@ -23,18 +24,96 @@ export default function SeerahPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const [events, setEvents] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [names, setNames] = useState([]);
+  const [traits, setTraits] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const [eventRecords, locationRecords, nameRecords, traitRecords] = await Promise.all([
+          SeerahEvent.list("year_ce"),
+          SeerahLocation.list("-events_count"),
+          ProphetName.list("-created_date"),
+          CharacterTrait.list("-created_date"),
+        ]);
+        setEvents(eventRecords);
+        setLocations(locationRecords);
+        setNames(nameRecords);
+        setTraits(traitRecords);
+      } catch (error) {
+        console.error("Error loading Seerah content:", error);
+      }
+      setIsLoading(false);
+    };
+    load();
+  }, []);
+
+  const displayEvents = useMemo(
+    () =>
+      events.map((e) => ({
+        id: e.id,
+        yearCE: e.year_ce,
+        yearAH: e.year_ah,
+        title: e.title,
+        titleArabic: e.title_arabic,
+        era: e.era,
+        description: e.description,
+        detailedText: e.detailed_text,
+        keyLessons: e.key_lessons || [],
+        authenticSources: e.authentic_sources || [],
+      })),
+    [events]
+  );
+
+  const displayLocations = useMemo(
+    () =>
+      locations.map((l) => ({
+        name: l.name,
+        arabicName: l.arabic_name,
+        significance: l.significance,
+        eventsCount: l.events_count,
+      })),
+    [locations]
+  );
+
+  const displayNames = useMemo(
+    () =>
+      names.map((n) => ({
+        arabic: n.arabic,
+        transliteration: n.transliteration,
+        meaning: n.meaning,
+        reference: n.reference,
+      })),
+    [names]
+  );
+
+  const displayTraits = useMemo(
+    () =>
+      traits.map((t) => ({
+        trait: t.trait,
+        arabicTrait: t.arabic_trait,
+        description: t.description,
+        hadithCitation: t.hadith_citation,
+      })),
+    [traits]
+  );
+
   const filteredEvents = useMemo(() => {
-    let events = SEERAH_TIMELINE;
+    let filtered = displayEvents;
 
     if (activeTab === "early") {
-      events = events.filter((e) => e.era === "early");
+      filtered = filtered.filter((e) => e.era === "early");
     } else if (activeTab === "prophethood") {
-      events = events.filter((e) => e.era === "prophethood");
+      filtered = filtered.filter((e) => e.era === "prophethood");
     }
 
     const query = searchQuery.trim().toLowerCase();
     if (query) {
-      events = events.filter(
+      filtered = filtered.filter(
         (e) =>
           e.title.toLowerCase().includes(query) ||
           e.description.toLowerCase().includes(query) ||
@@ -42,8 +121,8 @@ export default function SeerahPage() {
       );
     }
 
-    return events;
-  }, [activeTab, searchQuery]);
+    return filtered;
+  }, [displayEvents, activeTab, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -79,23 +158,47 @@ export default function SeerahPage() {
           </TabsList>
 
           <TabsContent value="overview">
-            <TimelineTabContent events={filteredEvents} onSelectEvent={setSelectedEvent} />
+            <TimelineTabContent
+              events={filteredEvents}
+              locations={displayLocations}
+              names={displayNames}
+              isLoading={isLoading}
+              onSelectEvent={setSelectedEvent}
+            />
           </TabsContent>
 
           <TabsContent value="early">
-            <TimelineTabContent events={filteredEvents} onSelectEvent={setSelectedEvent} />
+            <TimelineTabContent
+              events={filteredEvents}
+              locations={displayLocations}
+              names={displayNames}
+              isLoading={isLoading}
+              onSelectEvent={setSelectedEvent}
+            />
           </TabsContent>
 
           <TabsContent value="prophethood">
-            <TimelineTabContent events={filteredEvents} onSelectEvent={setSelectedEvent} />
+            <TimelineTabContent
+              events={filteredEvents}
+              locations={displayLocations}
+              names={displayNames}
+              isLoading={isLoading}
+              onSelectEvent={setSelectedEvent}
+            />
           </TabsContent>
 
           <TabsContent value="character">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {CHARACTER_TRAITS.map((trait, i) => (
-                <CharacterTraitCard key={i} trait={trait} />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-lg" />)}
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayTraits.map((trait, i) => (
+                  <CharacterTraitCard key={i} trait={trait} />
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
@@ -125,7 +228,7 @@ export default function SeerahPage() {
   );
 }
 
-function TimelineTabContent({ events, onSelectEvent }) {
+function TimelineTabContent({ events, locations, names, isLoading, onSelectEvent }) {
   return (
     <div className="space-y-6">
       <Card>
@@ -136,7 +239,11 @@ function TimelineTabContent({ events, onSelectEvent }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {events.length > 0 ? (
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+            </div>
+          ) : events.length > 0 ? (
             <div className="space-y-4">
               {events.map((event) => (
                 <EventCard key={event.id} event={event} onClick={() => onSelectEvent(event)} />
@@ -157,7 +264,7 @@ function TimelineTabContent({ events, onSelectEvent }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {KEY_LOCATIONS.map((location) => {
+            {locations.map((location) => {
               const Icon = LOCATION_ICONS[location.name] || MapPin;
               return (
                 <div key={location.name} className="p-3 bg-secondary rounded-lg flex items-start gap-3">
@@ -180,7 +287,7 @@ function TimelineTabContent({ events, onSelectEvent }) {
             <CardTitle className="font-display text-primary">Names of Prophet ﷺ</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {PROPHET_NAMES.map((name) => (
+            {names.map((name) => (
               <ProphetNameChip key={name.transliteration} name={name} />
             ))}
           </CardContent>

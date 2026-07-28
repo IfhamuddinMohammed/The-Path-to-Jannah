@@ -1,0 +1,23 @@
+{
+  "name": "SeerahLocation",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the location"
+    },
+    "arabic_name": {
+      "type": "string",
+      "description": "Name in Arabic"
+    },
+    "significance": {
+      "type": "string",
+      "description": "Why this location is significant in the Seerah"
+    },
+    "events_count": {
+      "type": "number",
+      "description": "Number of notable events associated with this location"
+    }
+  },
+  "required": ["name", "arabic_name", "significance"]
+}

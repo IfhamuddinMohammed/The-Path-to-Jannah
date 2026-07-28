@@ -35,6 +35,20 @@
       "type": "string",
       "description": "The English translation of the Hadith"
     },
+    "urdu_text": {
+      "type": "string",
+      "description": "The Urdu translation of the Hadith"
+    },
+    "roman_urdu_text": {
+      "type": "string",
+      "description": "The Roman Urdu (Latin-script) translation of the Hadith"
+    },
+    "authenticity": {
+      "type": "string",
+      "enum": ["Sahih", "Hasan", "Da'if"],
+      "default": "Sahih",
+      "description": "The authenticity grading of the Hadith"
+    },
     "topic": {
       "type": "string",
       "enum": [
@@ -47,7 +61,8 @@
         "akhlaq",
         "knowledge",
         "quran",
-        "repentance"
+        "repentance",
+        "purity"
       ],
       "description": "The main topic of the Hadith"
     }

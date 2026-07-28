@@ -35,6 +35,7 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import Breadcrumbs from "@/components/layout/Breadcrumbs";
 import GlobalSearch from "@/components/layout/GlobalSearch";
@@ -83,6 +84,31 @@ const officialLinks = [
   { label: "Broadcast Channel", href: "#", icon: Radio },
 ];
 
+function NavLink({ item, isActive }) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  return (
+    <SidebarMenuButton
+      asChild
+      tooltip={item.title}
+      className={`hover:bg-accent/10 hover:text-accent transition-all duration-200 rounded-lg mb-0.5 no-select ${
+        isActive ? "bg-accent/15 text-accent border-r-2 border-accent nav-active-glow" : ""
+      }`}
+    >
+      <Link
+        to={item.url}
+        className="flex items-center gap-3 px-3 py-2"
+        onClick={() => {
+          if (isMobile) setOpenMobile(false);
+        }}
+      >
+        <item.icon className="w-4 h-4 shrink-0" />
+        <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
+      </Link>
+    </SidebarMenuButton>
+  );
+}
+
 export default function Layout() {
   const location = useLocation();
 
@@ -114,20 +140,7 @@ export default function Layout() {
                   <SidebarMenu>
                     {items.map((item) => (
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          tooltip={item.title}
-                          className={`hover:bg-accent/10 hover:text-accent transition-all duration-200 rounded-lg mb-0.5 no-select ${
-                            location.pathname === item.url
-                              ? "bg-accent/15 text-accent border-r-2 border-accent nav-active-glow"
-                              : ""
-                          }`}
-                        >
-                          <Link to={item.url} className="flex items-center gap-3 px-3 py-2">
-                            <item.icon className="w-4 h-4 shrink-0" />
-                            <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
+                        <NavLink item={item} isActive={location.pathname === item.url} />
                       </SidebarMenuItem>
                     ))}
                   </SidebarMenu>
@@ -181,7 +194,7 @@ export default function Layout() {
           {/* Top Header with safe-area notch support */}
           <header className="pt-safe bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
             <div className="px-4 py-3 flex items-center gap-3">
-              <SidebarTrigger className="hidden md:flex hover:bg-accent/10 p-2 rounded-lg transition-colors duration-200 shrink-0 no-select" />
+              <SidebarTrigger className="flex hover:bg-accent/10 p-2 rounded-lg transition-colors duration-200 shrink-0 no-select" />
               {/* Mobile brand logo */}
               <div className="md:hidden flex items-center gap-2 shrink-0">
                 <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/70 rounded-full flex items-center justify-center glow-gold">

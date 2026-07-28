@@ -1,31 +1,103 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { Hadith } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, Search, Book, ChevronsRight } from "lucide-react";
-import { HADITH_COLLECTIONS, HADITH_TOPICS, SAMPLE_HADITHS } from "@/data/hadithData";
 import LanguageToggle from "@/components/hadith/LanguageToggle";
 import HadithCard from "@/components/hadith/HadithCard";
 import { cn } from "@/lib/utils";
 
+const COLLECTIONS = [
+  "Sahih al-Bukhari",
+  "Sahih Muslim",
+  "Sunan an-Nasa'i",
+  "Sunan Abi Dawood",
+  "Jami` at-Tirmidhi",
+  "Sunan Ibn Majah",
+  "Riyad as-Salihin",
+];
+
+const TOPIC_LABELS = {
+  faith: "Faith",
+  prayer: "Prayer",
+  charity: "Charity",
+  fasting: "Fasting",
+  pilgrimage: "Pilgrimage",
+  family: "Family",
+  akhlaq: "Manners (Akhlaq)",
+  knowledge: "Knowledge",
+  quran: "Qur'an",
+  repentance: "Repentance",
+  purity: "Purity (Taharah)",
+};
+
 export default function HadithPage() {
+  const [hadiths, setHadiths] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCollection, setSelectedCollection] = useState("Sahih Muslim");
   const [selectedTopic, setSelectedTopic] = useState("All Topics");
   const [searchQuery, setSearchQuery] = useState("");
   const [language, setLanguage] = useState("Arabic + English");
 
-  const activeCollectionStats = HADITH_COLLECTIONS.find((c) => c.name === selectedCollection);
+  useEffect(() => {
+    const loadHadiths = async () => {
+      setIsLoading(true);
+      try {
+        const data = await Hadith.list("-created_date");
+        setHadiths(data);
+      } catch (error) {
+        console.error("Error loading hadiths:", error);
+      }
+      setIsLoading(false);
+    };
+    loadHadiths();
+  }, []);
+
+  const displayHadiths = useMemo(
+    () =>
+      hadiths.map((h) => ({
+        id: h.id,
+        collection: h.collection,
+        reference: h.hadith_number ? `${h.collection} #${h.hadith_number}` : h.collection,
+        narrator: h.narrator,
+        topic: h.topic,
+        authenticity: h.authenticity || "Sahih",
+        arabic: h.arabic_text,
+        english: h.english_text,
+        urdu: h.urdu_text,
+        romanUrdu: h.roman_urdu_text,
+      })),
+    [hadiths]
+  );
+
+  const collectionCounts = useMemo(() => {
+    const counts = {};
+    for (const h of displayHadiths) {
+      counts[h.collection] = (counts[h.collection] || 0) + 1;
+    }
+    return counts;
+  }, [displayHadiths]);
+
+  const availableTopics = useMemo(() => {
+    const topics = new Set(displayHadiths.map((h) => h.topic).filter(Boolean));
+    return ["All Topics", ...Array.from(topics)];
+  }, [displayHadiths]);
 
   const filteredHadiths = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return SAMPLE_HADITHS.filter((h) => {
+    return displayHadiths.filter((h) => {
       if (h.collection !== selectedCollection) return false;
       if (selectedTopic !== "All Topics" && h.topic !== selectedTopic) return false;
-      if (query && !(h.english.toLowerCase().includes(query) || h.narrator.toLowerCase().includes(query))) {
+      if (
+        query &&
+        !(h.english?.toLowerCase().includes(query) || h.narrator?.toLowerCase().includes(query))
+      ) {
         return false;
       }
       return true;
     });
-  }, [selectedCollection, selectedTopic, searchQuery]);
+  }, [displayHadiths, selectedCollection, selectedTopic, searchQuery]);
 
   return (
     <div className="min-h-screen p-4 md:p-6">
@@ -59,26 +131,26 @@ export default function HadithPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {HADITH_COLLECTIONS.map((collection) => (
+                {COLLECTIONS.map((collectionName) => (
                   <div
-                    key={collection.name}
+                    key={collectionName}
                     className={cn(
                       "p-4 border-b border-border cursor-pointer transition-colors",
-                      selectedCollection === collection.name
+                      selectedCollection === collectionName
                         ? "bg-accent/10 border-l-4 border-l-accent"
                         : "hover:bg-accent/5"
                     )}
-                    onClick={() => setSelectedCollection(collection.name)}
+                    onClick={() => setSelectedCollection(collectionName)}
                   >
                     <h4 className="font-medium text-primary flex items-center justify-between font-body">
-                      {collection.name}
-                      {selectedCollection === collection.name && <ChevronsRight className="w-4 h-4 text-accent shrink-0" />}
+                      {collectionName}
+                      {selectedCollection === collectionName && (
+                        <ChevronsRight className="w-4 h-4 text-accent shrink-0" />
+                      )}
                     </h4>
-                    {selectedCollection === collection.name && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {collection.name} • {collection.count} Hadiths
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {collectionCounts[collectionName] || 0} Hadiths
+                    </p>
                   </div>
                 ))}
               </CardContent>
@@ -97,13 +169,11 @@ export default function HadithPage() {
                     className="pl-10"
                   />
                 </div>
-                {activeCollectionStats && (
-                  <p className="text-xs text-muted-foreground">
-                    {activeCollectionStats.name} • {activeCollectionStats.count} Hadiths
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  {selectedCollection} • {collectionCounts[selectedCollection] || 0} Hadiths
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {HADITH_TOPICS.map((topic) => (
+                  {availableTopics.map((topic) => (
                     <button
                       key={topic}
                       onClick={() => setSelectedTopic(topic)}
@@ -114,7 +184,7 @@ export default function HadithPage() {
                           : "bg-secondary text-muted-foreground border-border hover:bg-secondary/70"
                       )}
                     >
-                      {topic}
+                      {topic === "All Topics" ? topic : TOPIC_LABELS[topic] || topic}
                     </button>
                   ))}
                 </div>
@@ -122,15 +192,23 @@ export default function HadithPage() {
             </Card>
 
             <div className="space-y-4">
-              {filteredHadiths.map((hadith) => (
-                <HadithCard key={hadith.id} hadith={hadith} language={language} />
-              ))}
-              {filteredHadiths.length === 0 && (
-                <Card className="bg-card border-border glow-shadow">
-                  <CardContent className="p-8 text-center text-muted-foreground">
-                    No Hadith found for this collection or search query.
-                  </CardContent>
-                </Card>
+              {isLoading ? (
+                Array(3)
+                  .fill(0)
+                  .map((_, i) => <Skeleton key={i} className="h-48 w-full rounded-lg" />)
+              ) : (
+                <>
+                  {filteredHadiths.map((hadith) => (
+                    <HadithCard key={hadith.id} hadith={hadith} language={language} />
+                  ))}
+                  {filteredHadiths.length === 0 && (
+                    <Card className="bg-card border-border glow-shadow">
+                      <CardContent className="p-8 text-center text-muted-foreground">
+                        No Hadith found for this collection or search query.
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               )}
             </div>
           </div>

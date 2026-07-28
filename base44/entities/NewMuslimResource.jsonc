@@ -1,0 +1,29 @@
+{
+  "name": "NewMuslimResource",
+  "type": "object",
+  "properties": {
+    "section": {
+      "type": "string",
+      "enum": ["essentials", "first_steps", "support"],
+      "description": "Which section of the New Muslims page this resource belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the resource or step"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description or explanation"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["essential", "important"],
+      "description": "Priority level, used for items in the essentials section"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order within its section"
+    }
+  },
+  "required": ["section", "title", "description"]
+}

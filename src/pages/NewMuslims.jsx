@@ -1,36 +1,39 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { NewMuslimResource } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, BookOpen, Users, Compass, Clock, Star } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Heart, BookOpen, Users, Star } from "lucide-react";
+
+const SUPPORT_STYLES = ["bg-accent/10 text-accent", "bg-primary/10 text-primary", "bg-secondary text-secondary-foreground"];
 
 export default function NewMuslimsPage() {
-  const essentials = [
-    {
-      title: "Shahada - Declaration of Faith",
-      description: "Learn the meaning and importance of the Islamic testimony",
-      icon: Star,
-      status: "essential"
-    },
-    {
-      title: "How to Perform Salah (Prayer)",
-      description: "Step-by-step guide to the five daily prayers",
-      icon: Clock,
-      status: "essential"
-    },
-    {
-      title: "Qibla Direction",
-      description: "Finding the direction to face during prayer",
-      icon: Compass,
-      status: "essential"
-    },
-    {
-      title: "Basic Islamic Beliefs",
-      description: "Understanding the six pillars of faith (Iman)",
-      icon: BookOpen,
-      status: "important"
-    }
-  ];
+  const [resources, setResources] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const data = await NewMuslimResource.list("order");
+        setResources(data);
+      } catch (error) {
+        console.error("Error loading New Muslims resources:", error);
+      }
+      setIsLoading(false);
+    };
+    load();
+  }, []);
+
+  const bySection = useMemo(() => {
+    const sort = (arr) => [...arr].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    return {
+      essentials: sort(resources.filter((r) => r.section === "essentials")),
+      first_steps: sort(resources.filter((r) => r.section === "first_steps")),
+      support: sort(resources.filter((r) => r.section === "support")),
+    };
+  }, [resources]);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -60,30 +63,30 @@ export default function NewMuslimsPage() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {essentials.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <Card key={index} className="hover:shadow-lg transition-all duration-300">
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-lg" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {bySection.essentials.map((item) => (
+              <Card key={item.id} className="hover:shadow-lg transition-all duration-300">
                 <CardHeader>
                   <div className="flex items-center justify-between mb-2">
-                    <Icon className="w-8 h-8 text-primary" />
-                    <Badge variant={item.status === 'essential' ? 'destructive' : 'secondary'}>
-                      {item.status === 'essential' ? 'Essential' : 'Important'}
+                    <Star className="w-8 h-8 text-primary" />
+                    <Badge variant={item.status === "essential" ? "destructive" : "secondary"}>
+                      {item.status === "essential" ? "Essential" : "Important"}
                     </Badge>
                   </div>
                   <CardTitle className="text-primary">{item.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">{item.description}</p>
-                  <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
-                    Learn More
-                  </Button>
+                  <p className="text-muted-foreground">{item.description}</p>
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
@@ -94,24 +97,22 @@ export default function NewMuslimsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
-                  <div className="w-6 h-6 bg-primary rounded-full text-primary-foreground text-xs flex items-center justify-center font-bold">1</div>
-                  <span className="text-foreground">Learn and recite the Shahada</span>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
-                  <div className="w-6 h-6 bg-primary rounded-full text-primary-foreground text-xs flex items-center justify-center font-bold">2</div>
-                  <span className="text-foreground">Learn basic Arabic prayers</span>
+              ) : (
+                <div className="space-y-3">
+                  {bySection.first_steps.map((step, index) => (
+                    <div key={step.id} className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+                      <div className="w-6 h-6 bg-primary rounded-full text-primary-foreground text-xs flex items-center justify-center font-bold shrink-0">
+                        {index + 1}
+                      </div>
+                      <span className="text-foreground">{step.title}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
-                  <div className="w-6 h-6 bg-primary rounded-full text-primary-foreground text-xs flex items-center justify-center font-bold">3</div>
-                  <span className="text-foreground">Start with 1-2 prayers daily</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
-                  <div className="w-6 h-6 bg-primary rounded-full text-primary-foreground text-xs flex items-center justify-center font-bold">4</div>
-                  <span className="text-foreground">Connect with local Muslim community</span>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -123,27 +124,16 @@ export default function NewMuslimsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-accent/10 rounded-lg">
-                <h4 className="font-semibold text-accent mb-2">Find Your Local Mosque</h4>
-                <p className="text-sm text-foreground/80">
-                  Visit your nearest mosque to meet other Muslims and join community prayers.
-                </p>
-              </div>
-
-              <div className="p-4 bg-primary/10 rounded-lg">
-                <h4 className="font-semibold text-primary mb-2">Take It Easy</h4>
-                <p className="text-sm text-foreground/80">
-                  Islam is easy and meant to bring peace to your life. Don't overwhelm yourself -
-                  learn gradually with patience.
-                </p>
-              </div>
-
-              <div className="p-4 bg-secondary rounded-lg">
-                <h4 className="font-semibold text-secondary-foreground mb-2">Ask Questions</h4>
-                <p className="text-sm text-secondary-foreground/80">
-                  Never hesitate to ask questions. Seeking knowledge is encouraged in Islam.
-                </p>
-              </div>
+              {isLoading ? (
+                Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)
+              ) : (
+                bySection.support.map((item, index) => (
+                  <div key={item.id} className={`p-4 rounded-lg ${SUPPORT_STYLES[index % SUPPORT_STYLES.length]}`}>
+                    <h4 className="font-semibold mb-2">{item.title}</h4>
+                    <p className="text-sm opacity-90">{item.description}</p>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

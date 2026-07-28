@@ -1,88 +1,61 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { FiqhRuling } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Scale, Book, Droplets, Coins, Calendar, Heart } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+const CATEGORY_META = {
+  purification: {
+    label: "Purification (Taharah)",
+    icon: Droplets,
+    color: "bg-[hsl(var(--chart-3)/0.15)] text-[hsl(var(--chart-3))]",
+  },
+  prayer: {
+    label: "Prayer (Salah)",
+    icon: Calendar,
+    color: "bg-primary/10 text-primary",
+  },
+  charity: {
+    label: "Charity (Zakat)",
+    icon: Coins,
+    color: "bg-accent/10 text-accent",
+  },
+  family: {
+    label: "Family & Marriage",
+    icon: Heart,
+    color: "bg-[hsl(var(--chart-4)/0.15)] text-[hsl(var(--chart-4))]",
+  },
+};
+
+const CATEGORY_ORDER = ["purification", "prayer", "charity", "family"];
+
 export default function FiqhPage() {
-  const fiqhCategories = [
-    {
-      title: "Purification (Taharah)",
-      icon: Droplets,
-      color: "bg-[hsl(var(--chart-3)/0.15)] text-[hsl(var(--chart-3))]",
-      topics: [
-        {
-          title: "Wudu (Ablution)",
-          content: "Learn the proper steps for performing ablution before prayer, including the conditions that break wudu and how to renew it."
-        },
-        {
-          title: "Ghusl (Full Body Ablution)",
-          content: "When and how to perform the complete washing of the body, required after certain states of impurity."
-        },
-        {
-          title: "Najasah (Impurities)",
-          content: "Understanding what constitutes impurity in Islamic law and how to purify oneself and one's clothing."
-        }
-      ]
-    },
-    {
-      title: "Prayer (Salah)",
-      icon: Calendar,
-      color: "bg-primary/10 text-primary",
-      topics: [
-        {
-          title: "Five Daily Prayers",
-          content: "Timing, conditions, and proper performance of the obligatory prayers: Fajr, Dhuhr, Asr, Maghrib, and Isha."
-        },
-        {
-          title: "Friday Prayer (Jummah)",
-          content: "Special rulings for the congregational Friday prayer and its importance in Islam."
-        },
-        {
-          title: "Missed Prayers (Qada)",
-          content: "How to make up prayers that were missed due to sleep, forgetfulness, or other valid reasons."
-        }
-      ]
-    },
-    {
-      title: "Charity (Zakat)",
-      icon: Coins,
-      color: "bg-accent/10 text-accent",
-      topics: [
-        {
-          title: "Zakat Calculation",
-          content: "How to calculate the obligatory charity (2.5%) on different types of wealth including money, gold, silver, and business assets."
-        },
-        {
-          title: "Who Receives Zakat",
-          content: "The eight categories of people eligible to receive Zakat according to Islamic law."
-        },
-        {
-          title: "Zakat al-Fitr",
-          content: "The special charity given at the end of Ramadan before Eid prayers."
-        }
-      ]
-    },
-    {
-      title: "Family & Marriage",
-      icon: Heart,
-      color: "bg-[hsl(var(--chart-4)/0.15)] text-[hsl(var(--chart-4))]",
-      topics: [
-        {
-          title: "Marriage Contract",
-          content: "Islamic requirements for a valid marriage, including the marriage contract, witnesses, and mahr (dower)."
-        },
-        {
-          title: "Rights and Duties",
-          content: "The rights and responsibilities of spouses towards each other in Islamic marriage."
-        },
-        {
-          title: "Divorce Rulings",
-          content: "Islamic laws regarding divorce, including types of divorce and waiting periods (iddah)."
-        }
-      ]
-    }
-  ];
+  const [rulings, setRulings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const data = await FiqhRuling.list("-created_date");
+        setRulings(data);
+      } catch (error) {
+        console.error("Error loading Fiqh rulings:", error);
+      }
+      setIsLoading(false);
+    };
+    load();
+  }, []);
+
+  const groupedCategories = useMemo(() => {
+    return CATEGORY_ORDER.map((key) => ({
+      key,
+      ...CATEGORY_META[key],
+      topics: rulings.filter((r) => r.category === key),
+    })).filter((category) => category.topics.length > 0);
+  }, [rulings]);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -115,44 +88,48 @@ export default function FiqhPage() {
         </Card>
 
         <div className="space-y-6">
-          {fiqhCategories.map((category, categoryIndex) => {
-            const Icon = category.icon;
-            return (
-              <Card key={categoryIndex}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <Icon className="w-6 h-6 text-primary" />
-                    <span>{category.title}</span>
-                    <Badge className={category.color}>{category.topics.length} Topics</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Accordion type="single" collapsible className="w-full">
-                    {category.topics.map((topic, topicIndex) => (
-                      <AccordionItem key={topicIndex} value={`${categoryIndex}-${topicIndex}`}>
-                        <AccordionTrigger className="text-left font-medium text-foreground">
-                          {topic.title}
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="pt-2 pb-4">
-                            <p className="text-muted-foreground leading-relaxed mb-4">
-                              {topic.content}
-                            </p>
-                            <div className="p-4 bg-secondary rounded-lg border border-border">
-                              <p className="text-sm text-secondary-foreground">
-                                <strong>Note:</strong> For detailed rulings and specific situations,
-                                consult authentic Islamic sources or speak with a knowledgeable scholar.
+          {isLoading ? (
+            Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-lg" />)
+          ) : (
+            groupedCategories.map((category) => {
+              const Icon = category.icon;
+              return (
+                <Card key={category.key}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <Icon className="w-6 h-6 text-primary" />
+                      <span>{category.label}</span>
+                      <Badge className={category.color}>{category.topics.length} Topics</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Accordion type="single" collapsible className="w-full">
+                      {category.topics.map((topic) => (
+                        <AccordionItem key={topic.id} value={topic.id}>
+                          <AccordionTrigger className="text-left font-medium text-foreground">
+                            {topic.title}
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="pt-2 pb-4">
+                              <p className="text-muted-foreground leading-relaxed mb-4">
+                                {topic.content}
                               </p>
+                              <div className="p-4 bg-secondary rounded-lg border border-border">
+                                <p className="text-sm text-secondary-foreground">
+                                  <strong>Note:</strong> For detailed rulings and specific situations,
+                                  consult authentic Islamic sources or speak with a knowledgeable scholar.
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </CardContent>
-              </Card>
-            );
-          })}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
 
         <Card className="mt-8">

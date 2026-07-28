@@ -57,4 +57,12 @@ export default [
       "react-hooks/rules-of-hooks": "error",
     },
   },
+  {
+    files: ["src/components/home/hero3d/**/*.jsx", "src/components/home/HeroCanvas.jsx"],
+    rules: {
+      // react-three-fiber renders custom (non-DOM) JSX intrinsics (mesh, ambientLight, bufferAttribute, ...)
+      // whose props ESLint's react plugin can't verify against the DOM prop list.
+      "react/no-unknown-property": "off",
+    },
+  },
 ];

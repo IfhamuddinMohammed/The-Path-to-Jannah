@@ -1,0 +1,23 @@
+{
+  "name": "CharacterTrait",
+  "type": "object",
+  "properties": {
+    "trait": {
+      "type": "string",
+      "description": "Name of the character trait"
+    },
+    "arabic_trait": {
+      "type": "string",
+      "description": "The trait name in Arabic"
+    },
+    "description": {
+      "type": "string",
+      "description": "Explanation of this trait with an example from the Prophet's ﷺ life"
+    },
+    "hadith_citation": {
+      "type": "string",
+      "description": "Source citation for this trait"
+    }
+  },
+  "required": ["trait", "arabic_trait", "description", "hadith_citation"]
+}

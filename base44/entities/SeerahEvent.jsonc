@@ -1,0 +1,46 @@
+{
+  "name": "SeerahEvent",
+  "type": "object",
+  "properties": {
+    "year_ce": {
+      "type": "string",
+      "description": "The Gregorian (CE) year the event took place"
+    },
+    "year_ah": {
+      "type": "string",
+      "description": "The Hijri (AH) year, if applicable"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the event"
+    },
+    "title_arabic": {
+      "type": "string",
+      "description": "Title in Arabic"
+    },
+    "era": {
+      "type": "string",
+      "enum": ["early", "prophethood", "medina"],
+      "description": "Which era of the Prophet's ﷺ life this event belongs to"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short summary of the event"
+    },
+    "detailed_text": {
+      "type": "string",
+      "description": "Full detailed account of the event"
+    },
+    "key_lessons": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key lessons drawn from this event"
+    },
+    "authentic_sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Authentic references (hadith collections, seerah books)"
+    }
+  },
+  "required": ["year_ce", "title", "era", "description", "detailed_text"]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "FiqhRuling",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": ["purification", "prayer", "charity", "family"],
+      "description": "Fiqh category this ruling belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the ruling or topic"
+    },
+    "content": {
+      "type": "string",
+      "description": "Explanation of the ruling"
+    }
+  },
+  "required": ["category", "title", "content"]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "ProphetName",
+  "type": "object",
+  "properties": {
+    "arabic": {
+      "type": "string",
+      "description": "The name in Arabic script"
+    },
+    "transliteration": {
+      "type": "string",
+      "description": "Latin-script transliteration of the name"
+    },
+    "meaning": {
+      "type": "string",
+      "description": "The meaning of the name"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Qur'an or Hadith reference for this name"
+    }
+  },
+  "required": ["arabic", "transliteration", "meaning"]
+}

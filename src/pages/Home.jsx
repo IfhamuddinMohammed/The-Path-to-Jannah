@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { Quote, Article } from "@/entities/all";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -9,7 +9,8 @@ import {
   Users,
   Sparkles,
   Moon,
-  ArrowRight } from
+  ArrowRight,
+  ChevronDown } from
 "lucide-react";
 
 import DailyQuote from "../components/home/DailyQuote";
@@ -17,25 +18,7 @@ import QuickNavigation from "../components/home/QuickNavigation";
 import FeaturedContent from "../components/home/FeaturedContent";
 import IslamicGreeting from "../components/home/IslamicGreeting";
 
-// Pre-computed star positions for the night-sky hero
-const stars = [
-  { top: "8%", left: "12%", size: 2, delay: "0s" },
-  { top: "15%", left: "85%", size: 1.5, delay: "0.5s" },
-  { top: "22%", left: "45%", size: 2.5, delay: "1s" },
-  { top: "30%", left: "70%", size: 1, delay: "1.5s" },
-  { top: "35%", left: "20%", size: 1.5, delay: "2s" },
-  { top: "42%", left: "92%", size: 2, delay: "0.3s" },
-  { top: "50%", left: "8%", size: 1, delay: "1.2s" },
-  { top: "55%", left: "55%", size: 1.5, delay: "0.8s" },
-  { top: "60%", left: "80%", size: 1, delay: "2.5s" },
-  { top: "68%", left: "30%", size: 2, delay: "0.6s" },
-  { top: "72%", left: "65%", size: 1.5, delay: "1.8s" },
-  { top: "78%", left: "15%", size: 1, delay: "0.2s" },
-  { top: "82%", left: "50%", size: 2, delay: "1.4s" },
-  { top: "88%", left: "88%", size: 1.5, delay: "2.2s" },
-  { top: "18%", left: "28%", size: 1, delay: "1.6s" },
-  { top: "25%", left: "60%", size: 1.5, delay: "0.9s" },
-];
+const HeroCanvas = lazy(() => import("../components/home/HeroCanvas"));
 
 export default function HomePage() {
   const [dailyQuote, setDailyQuote] = useState(null);
@@ -67,41 +50,10 @@ export default function HomePage() {
         {/* Geometric pattern overlay */}
         <div className="absolute inset-0 geometric-bg opacity-40"></div>
 
-        {/* Glowing stars */}
-        {stars.map((star, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-accent/80 animate-twinkle"
-            style={{
-              top: star.top,
-              left: star.left,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              animationDelay: star.delay,
-              boxShadow: `0 0 ${star.size * 3}px hsl(38 50% 60% / 0.6)`,
-            }}
-          />
-        ))}
-
-        {/* Crescent moon — top right */}
-        <div className="absolute top-8 right-8 md:top-12 md:right-16 animate-float-slow">
-          <div className="relative w-16 h-16 md:w-20 md:h-20">
-            <div className="absolute inset-0 rounded-full bg-accent/10 blur-2xl animate-glow-pulse"></div>
-            <svg viewBox="0 0 80 80" className="relative w-full h-full">
-              <defs>
-                <radialGradient id="crescentGrad" cx="40%" cy="35%">
-                  <stop offset="0%" stopColor="hsl(38 55% 72%)" />
-                  <stop offset="100%" stopColor="hsl(38 44% 48%)" />
-                </radialGradient>
-              </defs>
-              <path
-                d="M48 8 A32 32 0 1 0 48 72 A26 26 0 1 1 48 8"
-                fill="url(#crescentGrad)"
-                style={{ filter: "drop-shadow(0 0 12px hsl(38 50% 55% / 0.4))" }}
-              />
-            </svg>
-          </div>
-        </div>
+        {/* Immersive 3D scene — geometric star, crescent moon, starfield */}
+        <Suspense fallback={null}>
+          <HeroCanvas />
+        </Suspense>
 
         {/* Soft glow at bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background/30 to-transparent"></div>
@@ -125,7 +77,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <p className="text-base md:text-lg text-foreground/70 mb-8 max-w-2xl mx-auto leading-relaxed font-body">
+            <p className="text-base md:text-lg text-[hsl(40_30%_94%)] mb-8 max-w-2xl mx-auto leading-relaxed font-body" style={{ textShadow: "0 2px 18px hsl(215 48% 4% / 0.85), 0 1px 3px hsl(215 48% 4% / 0.9)" }}>
               Guidance towards the right path, inspired by the Qur'an and Sunnah.
               Discover authentic Islamic knowledge with love and wisdom.
             </p>
@@ -146,9 +98,22 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        {/* Scroll cue */}
+        <button
+          type="button"
+          onClick={() =>
+            document.getElementById("home-content")?.scrollIntoView({ behavior: "smooth" })
+          }
+          aria-label="Scroll down to explore"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-[hsl(40_30%_92%)]/70 hover:text-accent transition-colors animate-bounce"
+        >
+          <span className="text-xs tracking-wide">Explore</span>
+          <ChevronDown className="w-5 h-5" />
+        </button>
       </div>
 
-      <div className="px-6 py-12">
+      <div id="home-content" className="px-6 py-12">
         <div className="max-w-7xl mx-auto space-y-12">
           {/* Greeting */}
           <IslamicGreeting />
