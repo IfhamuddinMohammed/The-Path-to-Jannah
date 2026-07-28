@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 import {
   saveSurah,
   deleteSurah,
@@ -13,6 +16,45 @@ import {
 import { getAyahAudioUrl } from "@/lib/quranAudio";
 
 const BATCH_SIZE = 5;
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Saves a generated file (audio/PDF) so the user can actually find it afterwards.
+// Native WebViews don't support the `<a download>` blob trick real browsers use —
+// Android silently no-ops it, so the old code was reporting "success" for a file
+// that was never written anywhere. On native we write to the app's cache dir and
+// hand off to the OS share sheet, letting the user pick Downloads/Drive/Files, etc.
+// On web, the `<a download>` trick still works fine, so keep it as the fallback.
+async function saveBlobToDevice(blob, filename) {
+  if (Capacitor.isNativePlatform()) {
+    const base64Data = await blobToBase64(blob);
+    await Filesystem.writeFile({
+      path: filename,
+      data: base64Data,
+      directory: Directory.Cache,
+    });
+    const { uri } = await Filesystem.getUri({ path: filename, directory: Directory.Cache });
+    await Share.share({ title: filename, url: uri, dialogTitle: `Save "${filename}"` });
+    return { native: true };
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  return { native: false };
+}
 
 export function useQuranDownloads() {
   const [downloadedSurahs, setDownloadedSurahs] = useState(new Set());
@@ -167,16 +209,9 @@ export function useQuranDownloads() {
         // Concatenate all audio blobs into a single MP3 (these are elementary MPEG
         // streams with no ID3 header, so back-to-back concatenation plays cleanly).
         const combinedBlob = new Blob(blobs, { type: "audio/mpeg" });
-        const url = URL.createObjectURL(combinedBlob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${surahName} - Full Recitation.mp3`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const { native } = await saveBlobToDevice(combinedBlob, `${surahName} - Full Recitation.mp3`);
 
-        return { success: true, failedCount, totalCount: verses.length };
+        return { success: true, native, failedCount, totalCount: verses.length };
       } catch (error) {
         console.error("Device audio download failed:", error);
         return { success: false, failedCount: null, totalCount: null };
@@ -296,8 +331,9 @@ export function useQuranDownloads() {
           pageIndex += 1;
         }
 
-        pdf.save(`${surahName}.pdf`);
-        return { success: true };
+        const pdfBlob = pdf.output("blob");
+        const { native } = await saveBlobToDevice(pdfBlob, `${surahName}.pdf`);
+        return { success: true, native };
       } catch (error) {
         console.error("PDF download failed:", error);
         return { success: false };

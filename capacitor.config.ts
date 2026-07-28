@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.pathtojannah.app',
-  appName: 'The Path to Jannah',
+  appName: 'SIRAT',
   webDir: 'dist'
 };
 

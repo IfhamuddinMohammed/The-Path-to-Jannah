@@ -27,6 +27,7 @@ import {
   Music,
   FileText,
   ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,12 +44,89 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
+
+// Short, frequently-recited surahs surfaced as "Recommended" after finishing a surah.
+const POPULAR_SURAH_IDS = [1, 18, 36, 55, 56, 67, 112, 113, 114];
+
+function getRecommendedSurahs(excludeIds, count = 3) {
+  return POPULAR_SURAH_IDS.filter((id) => !excludeIds.includes(id))
+    .slice(0, count)
+    .map((id) => quranSurahs.find((s) => s.id === id))
+    .filter(Boolean);
+}
+
+const ARABIC_INDIC_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+function toArabicNumeral(num) {
+  return String(num)
+    .split("")
+    .map((d) => ARABIC_INDIC_DIGITS[Number(d)] ?? d)
+    .join("");
+}
+
+// Continuous, traditional Mushaf-style page — flowing justified Arabic text
+// with a decorative ayah-end marker between verses, no per-verse cards/translations.
+function ContinuousMushafView({ verses, loading, error, retry }) {
+  if (loading) {
+    return (
+      <div className="mt-6 p-6 md:p-10 rounded-xl bg-card border border-border space-y-3">
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-6 w-5/6" />
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-6 w-2/3" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="w-16 h-16 mx-auto text-destructive mb-4" />
+        <p className="text-foreground font-medium mb-4">{error}</p>
+        <Button variant="outline" size="sm" onClick={retry}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  if (!verses || verses.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">No verses to display.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6 p-6 md:p-10 rounded-xl bg-card border border-border relative overflow-hidden">
+      <div className="absolute inset-0 geometric-bg opacity-20 pointer-events-none"></div>
+      <p
+        dir="rtl"
+        className="relative arabic-font text-2xl md:text-3xl leading-loose text-primary text-justify"
+      >
+        {verses.map((verse) => (
+          <span key={verse.numberInSurah}>
+            {verse.arabic}
+            <span className="text-accent mx-1" aria-hidden="true">
+              {" "}
+              ۝{toArabicNumeral(verse.numberInSurah)}{" "}
+            </span>
+          </span>
+        ))}
+      </p>
+    </div>
+  );
+}
 
 export default function QuranPage() {
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReciter, setSelectedReciter] = useState("mishary");
   const [activeTab, setActiveTab] = useState("translation");
+  const [readingMode, setReadingMode] = useState("verse");
   const [currentPlaying, setCurrentPlaying] = useState(null);
   const audioRef = useRef(null);
 
@@ -160,7 +238,14 @@ export default function QuranPage() {
     } else if (result.failedCount > 0) {
       toast({
         title: "Audio downloaded with some gaps",
-        description: `${result.failedCount} of ${result.totalCount} verses couldn't be fetched and were skipped.`,
+        description: result.native
+          ? `${result.failedCount} of ${result.totalCount} verses couldn't be fetched. Choose where to save the rest from the share sheet.`
+          : `${result.failedCount} of ${result.totalCount} verses couldn't be fetched and were skipped.`,
+      });
+    } else if (result.native) {
+      toast({
+        title: "Choose where to save",
+        description: `Pick Downloads, Drive, or Files to save ${selectedSurah.name} — Full Recitation.mp3.`,
       });
     } else {
       toast({
@@ -183,6 +268,11 @@ export default function QuranPage() {
         title: "PDF download failed",
         description: "Something went wrong generating the PDF. Please try again.",
       });
+    } else if (result.native) {
+      toast({
+        title: "Choose where to save",
+        description: `Pick Downloads, Drive, or Files to save ${selectedSurah.name}.pdf.`,
+      });
     } else {
       toast({
         title: "PDF downloaded",
@@ -196,6 +286,20 @@ export default function QuranPage() {
     : false;
   const savedVerses = selectedSurah
     ? savedVersesForSurah(selectedSurah.id)
+    : [];
+
+  const selectedSurahIndex = selectedSurah
+    ? quranSurahs.findIndex((s) => s.id === selectedSurah.id)
+    : -1;
+  const prevSurah = selectedSurahIndex > 0 ? quranSurahs[selectedSurahIndex - 1] : null;
+  const nextSurah =
+    selectedSurahIndex >= 0 && selectedSurahIndex < quranSurahs.length - 1
+      ? quranSurahs[selectedSurahIndex + 1]
+      : null;
+  const recommendedSurahs = selectedSurah
+    ? getRecommendedSurahs(
+        [selectedSurah.id, prevSurah?.id, nextSurah?.id].filter((id) => id != null)
+      )
     : [];
 
   const renderVerseList = (
@@ -531,65 +635,182 @@ export default function QuranPage() {
                     </div>
                   )}
 
-                  <Tabs
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    className="w-full"
-                  >
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
-                      <TabsTrigger value="translation" className="text-xs sm:text-sm">Translation</TabsTrigger>
-                      <TabsTrigger value="transliteration" className="text-xs sm:text-sm">
-                        Roman English
-                      </TabsTrigger>
-                      <TabsTrigger value="romanurdu" className="text-xs sm:text-sm">
-                        Roman Urdu
-                      </TabsTrigger>
-                      <TabsTrigger value="saved" className="text-xs sm:text-sm">
-                        Saved ({savedVerses.length})
-                      </TabsTrigger>
-                    </TabsList>
+                  {/* Reading mode toggle */}
+                  <div className="flex justify-center mb-6">
+                    <div className="inline-flex p-1 rounded-full bg-muted border border-border">
+                      <button
+                        type="button"
+                        onClick={() => setReadingMode("verse")}
+                        className={cn(
+                          "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+                          readingMode === "verse"
+                            ? "bg-accent text-accent-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        Verse View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReadingMode("page")}
+                        className={cn(
+                          "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+                          readingMode === "page"
+                            ? "bg-accent text-accent-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        Page View
+                      </button>
+                    </div>
+                  </div>
 
-                    <TabsContent value="translation">
-                      {renderVerseList(true, false)}
-                    </TabsContent>
+                  {readingMode === "verse" ? (
+                    <Tabs
+                      value={activeTab}
+                      onValueChange={setActiveTab}
+                      className="w-full"
+                    >
+                      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+                        <TabsTrigger value="translation" className="text-xs sm:text-sm">Translation</TabsTrigger>
+                        <TabsTrigger value="transliteration" className="text-xs sm:text-sm">
+                          Roman English
+                        </TabsTrigger>
+                        <TabsTrigger value="romanurdu" className="text-xs sm:text-sm">
+                          Roman Urdu
+                        </TabsTrigger>
+                        <TabsTrigger value="saved" className="text-xs sm:text-sm">
+                          Saved ({savedVerses.length})
+                        </TabsTrigger>
+                      </TabsList>
 
-                    <TabsContent value="transliteration">
-                      {renderVerseList(false, true)}
-                    </TabsContent>
+                      <TabsContent value="translation">
+                        {renderVerseList(true, false)}
+                      </TabsContent>
 
-                    <TabsContent value="romanurdu">
-                      {romanUrduLoading ? (
-                        <div className="text-center py-12">
-                          <Loader2 className="w-12 h-12 mx-auto text-accent animate-spin mb-4" />
-                          <p className="text-muted-foreground font-medium">Generating Roman Urdu translation...</p>
-                          <p className="text-xs text-muted-foreground mt-2">This may take a moment</p>
-                        </div>
-                      ) : romanUrduError ? (
-                        <div className="text-center py-12">
-                          <AlertCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
-                          <p className="text-muted-foreground">{romanUrduError}</p>
-                        </div>
-                      ) : romanUrdu ? (
-                        renderVerseList(true, false, romanUrdu.map(v => ({ ...v, translation: v.romanUrdu })))
-                      ) : null}
-                    </TabsContent>
+                      <TabsContent value="transliteration">
+                        {renderVerseList(false, true)}
+                      </TabsContent>
 
-                    <TabsContent value="saved">
-                      {savedVerses.length > 0 ? (
-                        renderVerseList(true, true, savedVerses)
+                      <TabsContent value="romanurdu">
+                        {romanUrduLoading ? (
+                          <div className="text-center py-12">
+                            <Loader2 className="w-12 h-12 mx-auto text-accent animate-spin mb-4" />
+                            <p className="text-muted-foreground font-medium">Generating Roman Urdu translation...</p>
+                            <p className="text-xs text-muted-foreground mt-2">This may take a moment</p>
+                          </div>
+                        ) : romanUrduError ? (
+                          <div className="text-center py-12">
+                            <AlertCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
+                            <p className="text-muted-foreground">{romanUrduError}</p>
+                          </div>
+                        ) : romanUrdu ? (
+                          renderVerseList(true, false, romanUrdu.map(v => ({ ...v, translation: v.romanUrdu })))
+                        ) : null}
+                      </TabsContent>
+
+                      <TabsContent value="saved">
+                        {savedVerses.length > 0 ? (
+                          renderVerseList(true, true, savedVerses)
+                        ) : (
+                          <div className="text-center py-12">
+                            <Bookmark className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                            <h3 className="font-display text-xl font-medium text-primary mb-2">
+                              No Saved Verses
+                            </h3>
+                            <p className="text-muted-foreground">
+                              Bookmark verses from this surah to see them here.
+                            </p>
+                          </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  ) : (
+                    <ContinuousMushafView
+                      verses={verses}
+                      loading={loading}
+                      error={error}
+                      retry={retry}
+                    />
+                  )}
+
+                  {/* End of surah navigation */}
+                  <div className="mt-10 pt-8 border-t border-border">
+                    <div className="flex justify-center mb-6 lg:hidden">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSurah(null)}
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> Back to Surah List
+                      </button>
+                    </div>
+
+                    <div className="flex items-stretch gap-3 mb-8">
+                      {prevSurah ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSurah(prevSurah)}
+                          className="group flex-1 flex items-center gap-3 p-4 rounded-xl border border-border hover:border-accent/40 hover:bg-accent/5 transition-colors text-left min-w-0"
+                        >
+                          <ArrowLeft className="w-5 h-5 text-accent shrink-0 group-hover:-translate-x-0.5 transition-transform" />
+                          <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground">Previous</p>
+                            <p className="font-display font-medium text-primary truncate">
+                              {prevSurah.id}. {prevSurah.name}
+                            </p>
+                          </div>
+                        </button>
                       ) : (
-                        <div className="text-center py-12">
-                          <Bookmark className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                          <h3 className="font-display text-xl font-medium text-primary mb-2">
-                            No Saved Verses
-                          </h3>
-                          <p className="text-muted-foreground">
-                            Bookmark verses from this surah to see them here.
-                          </p>
-                        </div>
+                        <div className="flex-1" />
                       )}
-                    </TabsContent>
-                  </Tabs>
+
+                      {nextSurah ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSurah(nextSurah)}
+                          className="group flex-1 flex items-center justify-end gap-3 p-4 rounded-xl border border-border hover:border-accent/40 hover:bg-accent/5 transition-colors text-right min-w-0"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground">Next</p>
+                            <p className="font-display font-medium text-primary truncate">
+                              {nextSurah.id}. {nextSurah.name}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-accent shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                      ) : (
+                        <div className="flex-1" />
+                      )}
+                    </div>
+
+                    {recommendedSurahs.length > 0 && (
+                      <div>
+                        <h4 className="font-display text-lg font-semibold text-primary mb-4 text-center">
+                          Recommended Surahs
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {recommendedSurahs.map((surah) => (
+                            <button
+                              key={surah.id}
+                              type="button"
+                              onClick={() => setSelectedSurah(surah)}
+                              className="group p-4 rounded-xl border border-border bg-card hover:border-accent/40 hover:glow-gold transition-all duration-300 text-left"
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-muted-foreground">
+                                  {surah.id} · {surah.revelation}
+                                </span>
+                                <BookOpen className="w-4 h-4 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                              <p className="font-display font-medium text-primary">{surah.name}</p>
+                              <p className="text-accent arabic-font text-sm mt-1">{surah.arabic}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
               </>

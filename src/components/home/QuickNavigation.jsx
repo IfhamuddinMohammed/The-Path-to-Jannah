@@ -4,22 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
-  BookOpen,
   Video,
   Heart,
-  Moon,
+  Brain,
+  UserPlus,
+  Scale,
+  HelpCircle,
   Sun,
-  MessageSquare,
   ArrowRight
 } from "lucide-react";
 
+// Deliberately distinct from QuickAccessGrid's items (Qur'an, Hadith, Prayer Times,
+// Duas, Qibla, 99 Names, Tasbeeh, Guidance, Stories) and from the "Join Our
+// Community" CTA further down this page — this section surfaces sections that
+// don't already have a shortcut elsewhere on the home page.
 const navigationItems = [
-  { title: "Holy Qur'an", description: "Read and listen to the complete Qur'an with translations", icon: BookOpen, url: "Quran" },
-  { title: "Authentic Hadith", description: "Explore authentic sayings of Prophet Muhammad ﷺ", icon: MessageSquare, url: "Hadith" },
-  { title: "Prophets' Stories", description: "Learn from the lives of all Prophets and Messengers", icon: Heart, url: "Stories" },
-  { title: "Islamic Guidance", description: "Practical guidance for living according to the Sunnah", icon: Sun, url: "Guidance" },
   { title: "Islamic Videos", description: "Watch curated Islamic lectures and documentaries", icon: Video, url: "Videos" },
-  { title: "Daily Duas", description: "Learn essential duas for every aspect of life", icon: Moon, url: "Duas" },
+  { title: "Seerah", description: "Learn from the blessed life of Prophet Muhammad ﷺ", icon: Heart, url: "Seerah" },
+  { title: "Test Your Knowledge", description: "Challenge yourself with fun Islamic quizzes", icon: Brain, url: "Quiz" },
+  { title: "New Muslims", description: "A gentle starting guide for those new to Islam", icon: UserPlus, url: "NewMuslims" },
+  { title: "Fiqh Rulings", description: "Practical rulings for everyday worship and life", icon: Scale, url: "Fiqh" },
+  { title: "FAQ", description: "Answers to common questions about Islam and practice", icon: HelpCircle, url: "FAQ" },
 ];
 
 export default function QuickNavigation() {

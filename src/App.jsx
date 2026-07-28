@@ -20,6 +20,7 @@ import Community from './pages/Community';
 import PrayerTimes from './pages/PrayerTimes';
 import Qibla from './pages/Qibla';
 import Names from './pages/Names';
+import Tasbeeh from './pages/Tasbeeh';
 import Seerah from './pages/Seerah';
 import Quiz from './pages/Quiz';
 import Kids from './pages/Kids';
@@ -70,6 +71,7 @@ const AuthenticatedApp = () => {
         <Route path="/PrayerTimes" element={<PrayerTimes />} />
         <Route path="/Qibla" element={<Qibla />} />
         <Route path="/Names" element={<Names />} />
+        <Route path="/Tasbeeh" element={<Tasbeeh />} />
         <Route path="/Seerah" element={<Seerah />} />
         <Route path="/Quiz" element={<Quiz />} />
         <Route path="/Kids" element={<Kids />} />

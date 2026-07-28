@@ -29,14 +29,19 @@ export default function QiblaCompass({
           )}
         >
           <div className="absolute inset-4 rounded-full border border-border">
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-sm font-bold text-muted-foreground">N</div>
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-bold text-muted-foreground">S</div>
-            <div className="absolute top-1/2 left-2 -translate-y-1/2 text-sm font-bold text-muted-foreground">W</div>
-            <div className="absolute top-1/2 right-2 -translate-y-1/2 text-sm font-bold text-muted-foreground">E</div>
+            <div
+              className="absolute inset-0 transition-transform duration-150 ease-out"
+              style={{ transform: `rotate(${-deviceHeading}deg)` }}
+            >
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 text-sm font-bold text-muted-foreground">N</div>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-bold text-muted-foreground">S</div>
+              <div className="absolute top-1/2 left-2 -translate-y-1/2 text-sm font-bold text-muted-foreground">W</div>
+              <div className="absolute top-1/2 right-2 -translate-y-1/2 text-sm font-bold text-muted-foreground">E</div>
+            </div>
 
             {qiblaDirection !== null && (
               <div
-                className="absolute top-1/2 left-1/2 origin-bottom"
+                className="absolute top-1/2 left-1/2 origin-bottom transition-transform duration-150 ease-out"
                 style={{
                   transform: `translate(-50%, -100%) rotate(${relativeAngle}deg)`,
                   height: "88px",

@@ -1,0 +1,22 @@
+{
+  "name": "SIRAT — Path to Jannah",
+  "short_name": "SIRAT",
+  "description": "Guidance towards the right path, inspired by the Qur'an and Sunnah.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#064e3b",
+  "theme_color": "#064e3b",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

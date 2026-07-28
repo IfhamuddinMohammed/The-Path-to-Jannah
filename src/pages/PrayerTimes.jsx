@@ -7,11 +7,6 @@ import { Label } from "@/components/ui/label";
 import {
   Clock,
   MapPin,
-  Sunrise,
-  Sun,
-  Sunset,
-  Moon,
-  Star,
   Navigation,
   Loader2,
   Calendar,
@@ -19,6 +14,7 @@ import {
 import { format } from "date-fns";
 import { useAdhaan } from "@/hooks/useAdhaan";
 import AdhaanSettings from "@/components/adhaan/AdhaanSettings";
+import { getPrayerIcon, formatCountdown } from "@/lib/prayerFormat";
 
 export default function PrayerTimesPage() {
   const {
@@ -58,25 +54,6 @@ export default function PrayerTimesPage() {
     } else {
       setDetecting(false);
     }
-  };
-
-  const getPrayerIcon = (prayerName) => {
-    const icons = {
-      Fajr: Star,
-      Sunrise: Sunrise,
-      Dhuhr: Sun,
-      Asr: Sun,
-      Maghrib: Sunset,
-      Isha: Moon,
-    };
-    return icons[prayerName] || Clock;
-  };
-
-  const formatCountdown = (minutes) => {
-    if (minutes < 0) return "Now";
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
   };
 
   return (

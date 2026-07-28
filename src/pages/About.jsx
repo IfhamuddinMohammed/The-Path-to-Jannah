@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Heart, MessageCircle } from "lucide-react";
+import { MoonStar, Heart, MessageCircle } from "lucide-react";
 import AmeenCounter from "@/components/about/AmeenCounter";
 
 const PILLARS = [
@@ -30,11 +30,11 @@ export default function AboutPage() {
         {/* Hero */}
         <Card className="bg-card border-border glow-shadow overflow-hidden">
           <CardContent className="p-6 sm:p-10 text-center relative geometric-bg">
-            <Sparkles className="w-12 h-12 mx-auto text-accent mb-4" />
+            <MoonStar className="w-12 h-12 mx-auto text-accent mb-4" />
             <h1 className="font-display text-3xl sm:text-4xl font-bold text-primary mb-2">
-              The Path to Jannah
+              SIRAT
             </h1>
-            <p className="text-2xl text-accent arabic-font mb-4">طريق الإسلام</p>
+            <p className="text-2xl text-accent arabic-font mb-4">صراط</p>
             <p className="text-foreground/90 max-w-xl mx-auto leading-relaxed">
               "Guiding hearts toward the beauty, clarity, and peace of Islam."
             </p>

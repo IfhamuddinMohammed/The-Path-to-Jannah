@@ -8,6 +8,7 @@ import {
   Users,
   MessageSquare,
   Sparkles,
+  MoonStar,
   Moon,
   Sun,
   ShieldQuestion,
@@ -21,6 +22,7 @@ import {
   Instagram,
   Radio,
   Info,
+  CircleDashed,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +53,7 @@ const navigationItems = [
   { title: "Prayer Times", url: createPageUrl("PrayerTimes"), icon: Clock, group: "worship" },
   { title: "Qibla", url: createPageUrl("Qibla"), icon: Compass, group: "worship" },
   { title: "99 Names", url: createPageUrl("Names"), icon: Star, group: "worship" },
+  { title: "Tasbeeh", url: createPageUrl("Tasbeeh"), icon: CircleDashed, group: "worship" },
   { title: "Seerah", url: createPageUrl("Seerah"), icon: Heart, group: "learning" },
   { title: "Videos", url: createPageUrl("Videos"), icon: Video, group: "learning" },
   { title: "Duas", url: createPageUrl("Duas"), icon: Moon, group: "learning" },
@@ -120,11 +123,11 @@ export default function Layout() {
           <SidebarHeader className="border-b border-border p-6 group-data-[collapsible=icon]:p-3 geometric-bg">
             <div className="text-center">
               <div className="w-14 h-14 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 mx-auto mb-3 group-data-[collapsible=icon]:mb-0 bg-gradient-to-br from-accent to-accent/70 rounded-full flex items-center justify-center glow-gold transition-all">
-                <Sparkles className="w-7 h-7 group-data-[collapsible=icon]:w-4 group-data-[collapsible=icon]:h-4 text-primary-foreground" />
+                <MoonStar className="w-7 h-7 group-data-[collapsible=icon]:w-4 group-data-[collapsible=icon]:h-4 text-primary-foreground" />
               </div>
               <div className="group-data-[collapsible=icon]:hidden">
-                <h2 className="font-display text-xl font-semibold text-primary">The Path to Jannah</h2>
-                <p className="text-sm text-accent mt-0.5 arabic-font">طريق الإسلام</p>
+                <h2 className="font-display text-xl font-semibold text-primary">SIRAT</h2>
+                <p className="text-sm text-accent mt-0.5 arabic-font">صراط</p>
                 <p className="text-xs text-muted-foreground mt-1">Bismillah hir Rahman nir Rahim</p>
               </div>
             </div>
@@ -198,16 +201,16 @@ export default function Layout() {
               {/* Mobile brand logo */}
               <div className="md:hidden flex items-center gap-2 shrink-0">
                 <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/70 rounded-full flex items-center justify-center glow-gold">
-                  <Sparkles className="w-4 h-4 text-primary-foreground" />
+                  <MoonStar className="w-4 h-4 text-primary-foreground" />
                 </div>
               </div>
               <div className="hidden md:block">
                 <Breadcrumbs />
               </div>
-              <div className="ml-auto flex items-center gap-1">
-                <div className="w-full max-w-[140px] sm:max-w-xs sm:flex-1">
-                  <GlobalSearch />
-                </div>
+              <div className="flex-1 min-w-0 max-w-[260px] sm:max-w-sm md:ml-auto">
+                <GlobalSearch />
+              </div>
+              <div className="shrink-0">
                 <ThemeToggle />
               </div>
             </div>

@@ -25,12 +25,19 @@ export default function MobileBottomNav() {
               to={item.url}
               className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-colors no-select ${
                 isActive
-                  ? "text-accent"
-                  : "text-muted-foreground"
+                  ? "text-emerald-900 dark:text-emerald-400"
+                  : "text-slate-500 dark:text-slate-400"
               }`}
             >
               <item.icon className={`w-5 h-5 ${isActive ? "drop-shadow-sm" : ""}`} />
-              <span className="text-[10px] font-medium">{item.title}</span>
+              <span className={`text-[10px] ${isActive ? "font-bold" : "font-medium"}`}>
+                {item.title}
+              </span>
+              <span
+                className={`w-1 h-1 rounded-full transition-opacity ${
+                  isActive ? "opacity-100 bg-emerald-900 dark:bg-emerald-400" : "opacity-0"
+                }`}
+              />
             </Link>
           );
         })}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -20,15 +20,9 @@ import {
   Sun,
   BookUser,
   Loader2,
+  X,
+  CircleDashed,
 } from "lucide-react";
-import {
-  CommandDialog,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-} from "@/components/ui/command";
 import { createPageUrl } from "@/utils";
 import { surahs as quranSurahs } from "@/data/quranData";
 import { Article, Dua, FAQ, Hadith } from "@/entities/all";
@@ -42,6 +36,7 @@ const searchPages = [
   { title: "Prayer Times", url: "PrayerTimes", icon: Clock },
   { title: "Qibla", url: "Qibla", icon: Compass },
   { title: "99 Names", url: "Names", icon: Star },
+  { title: "Tasbeeh", url: "Tasbeeh", icon: CircleDashed },
   { title: "Seerah", url: "Seerah", icon: Heart },
   { title: "Videos", url: "Videos", icon: Video },
   { title: "Duas", url: "Duas", icon: Moon },
@@ -59,18 +54,37 @@ export default function GlobalSearch() {
   const [entityResults, setEntityResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const navigate = useNavigate();
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Keyboard shortcut ⌘K / Ctrl+K
+  // Keyboard shortcut ⌘K / Ctrl+K, Escape to close
   useEffect(() => {
     const handler = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setOpen((prev) => !prev);
+        setOpen(true);
+        inputRef.current?.focus();
+      }
+      if (e.key === "Escape") {
+        setOpen(false);
+        inputRef.current?.blur();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  // Close the suggestions panel when clicking outside of it
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
   // Debounced entity search
   useEffect(() => {
@@ -165,81 +179,132 @@ export default function GlobalSearch() {
   const handleSelect = (url) => {
     setOpen(false);
     setQuery("");
+    inputRef.current?.blur();
     navigate(createPageUrl(url));
   };
 
+  const handleClear = (e) => {
+    e.stopPropagation();
+    setQuery("");
+    inputRef.current?.focus();
+  };
+
   return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 w-full md:w-64 px-3 py-2 text-sm text-muted-foreground bg-muted hover:bg-secondary rounded-lg transition-colors"
+    <div ref={containerRef} className="relative w-full">
+      <div
+        className={`flex items-center gap-2 w-full px-3 py-2 text-sm bg-muted rounded-lg transition-colors ${
+          open ? "ring-2 ring-accent/40 bg-secondary" : ""
+        }`}
       >
-        <Search className="w-4 h-4 shrink-0" />
-        <span className="hidden md:inline">Search the platform…</span>
-        <span className="md:hidden">Search…</span>
-        <kbd className="hidden md:inline ml-auto text-xs bg-card border border-border rounded px-1.5 py-0.5">
-          ⌘K
-        </kbd>
-      </button>
-
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput
-          placeholder="Search surahs, articles, duas, FAQs, hadiths…"
+        <Search className="w-4 h-4 shrink-0 text-muted-foreground" />
+        <input
+          ref={inputRef}
+          type="text"
           value={query}
-          onValueChange={setQuery}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setOpen(true)}
+          placeholder="Search Qur'an, Hadith, Duas…"
+          className="flex-1 min-w-0 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
         />
-        <CommandList>
-          {query.trim().length < 2 && (
-            <CommandEmpty>Type at least 2 characters to search content…</CommandEmpty>
-          )}
-          {query.trim().length >= 2 && !hasResults && !searching && (
-            <CommandEmpty>No results found for "{query}".</CommandEmpty>
-          )}
-          {query.trim().length >= 2 && !hasResults && searching && (
-            <CommandEmpty>
-              <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-              Searching…
-            </CommandEmpty>
-          )}
+        {query ? (
+          <button
+            type="button"
+            onClick={handleClear}
+            aria-label="Clear search"
+            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        ) : (
+          <kbd className="hidden md:inline shrink-0 text-xs bg-card border border-border rounded px-1.5 py-0.5 text-muted-foreground">
+            ⌘K
+          </kbd>
+        )}
+      </div>
 
-          {pageResults.length > 0 && (
-            <CommandGroup heading="Pages">
-              {pageResults.map((page) => (
-                <CommandItem key={page.url} onSelect={() => handleSelect(page.url)}>
-                  <page.icon className="w-4 h-4 mr-2 text-primary" />
-                  <span>{page.title}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
+      {open && (
+        <div className="absolute left-0 right-0 top-full mt-2 z-50 bg-popover text-popover-foreground border border-border rounded-xl shadow-lg overflow-hidden">
+          <div className="max-h-[60vh] overflow-y-auto py-2">
+            {query.trim().length < 2 && (
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                Keep typing to search surahs, articles, duas & more
+              </p>
+            )}
+            {query.trim().length >= 2 && !hasResults && !searching && (
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                No results found for "{query}".
+              </p>
+            )}
+            {query.trim().length >= 2 && searching && (
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Searching…
+              </p>
+            )}
 
-          {surahResults.length > 0 && (
-            <CommandGroup heading="Qur'an Surahs">
-              {surahResults.map((surah) => (
-                <CommandItem key={surah.id} onSelect={() => handleSelect("Quran")}>
-                  <BookOpen className="w-4 h-4 mr-2 text-primary" />
-                  <span>
-                    {surah.id}. {surah.name} — {surah.transliteration}
-                  </span>
-                  <span className="ml-auto text-sm arabic-font text-primary">{surah.arabic}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
+            {pageResults.length > 0 && (
+              <div className="px-2 pb-2">
+                <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Pages
+                </p>
+                {pageResults.map((page) => (
+                  <button
+                    key={page.url}
+                    type="button"
+                    onClick={() => handleSelect(page.url)}
+                    className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-left hover:bg-accent/10 transition-colors"
+                  >
+                    <page.icon className="w-4 h-4 text-primary shrink-0" />
+                    <span className="truncate">{page.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
-          {entityResults.length > 0 && (
-            <CommandGroup heading="Content">
-              {entityResults.map((result) => (
-                <CommandItem key={result.key} onSelect={() => handleSelect(result.page)}>
-                  <result.icon className="w-4 h-4 mr-2 text-primary" />
-                  <span className="flex-1 truncate">{result.title}</span>
-                  <span className="text-xs text-muted-foreground ml-2 shrink-0">{result.type}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-        </CommandList>
-      </CommandDialog>
-    </>
+            {surahResults.length > 0 && (
+              <div className="px-2 pb-2">
+                <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Qur'an Surahs
+                </p>
+                {surahResults.map((surah) => (
+                  <button
+                    key={surah.id}
+                    type="button"
+                    onClick={() => handleSelect("Quran")}
+                    className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-left hover:bg-accent/10 transition-colors"
+                  >
+                    <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                    <span className="flex-1 truncate">
+                      {surah.id}. {surah.name} — {surah.transliteration}
+                    </span>
+                    <span className="text-sm arabic-font text-primary shrink-0">{surah.arabic}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {entityResults.length > 0 && (
+              <div className="px-2 pb-2">
+                <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Content
+                </p>
+                {entityResults.map((result) => (
+                  <button
+                    key={result.key}
+                    type="button"
+                    onClick={() => handleSelect(result.page)}
+                    className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-left hover:bg-accent/10 transition-colors"
+                  >
+                    <result.icon className="w-4 h-4 text-primary shrink-0" />
+                    <span className="flex-1 truncate">{result.title}</span>
+                    <span className="text-xs text-muted-foreground ml-2 shrink-0">{result.type}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

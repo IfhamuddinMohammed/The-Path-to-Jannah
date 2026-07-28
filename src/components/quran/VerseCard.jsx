@@ -14,7 +14,7 @@ export default function VerseCard({
 }) {
   return (
     <div
-      className={`relative p-4 md:p-5 rounded-xl transition-all duration-300 overflow-hidden ${
+      className={`relative p-5 md:p-6 rounded-xl transition-all duration-300 overflow-hidden ${
         isPlaying
           ? "bg-accent/8 gold-border glow-gold"
           : "bg-card border border-border glow-shadow hover:glow-gold"
@@ -34,16 +34,16 @@ export default function VerseCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-xl md:text-2xl text-primary mb-3 arabic-font leading-loose text-right">
+          <p className="text-2xl md:text-3xl text-primary mb-4 arabic-font leading-loose text-right">
             {verse.arabic}
           </p>
           {showTransliteration && verse.transliteration && (
-            <p className="text-muted-foreground leading-relaxed italic mb-2 font-body">
+            <p className="text-muted-foreground text-sm md:text-base leading-relaxed italic mb-2 font-body">
               {verse.transliteration}
             </p>
           )}
           {showTranslation && verse.translation && (
-            <p className="text-foreground/80 leading-relaxed font-body">
+            <p className="text-foreground/95 text-base md:text-lg leading-relaxed font-body">
               {verse.translation}
             </p>
           )}
