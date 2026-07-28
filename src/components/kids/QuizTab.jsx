@@ -50,7 +50,7 @@ export default function QuizTab() {
   if (finished) {
     return (
       <Card className="max-w-lg mx-auto text-center gold-border">
-        <CardContent className="p-8">
+        <CardContent className="p-6 sm:p-8">
           <div className="flex justify-center gap-1 mb-4">
             {Array.from({ length: kidsQuizQuestions.length }).map((_, i) => (
               <Star

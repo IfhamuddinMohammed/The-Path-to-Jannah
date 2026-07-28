@@ -68,9 +68,13 @@ export default function StoriesPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="prophets">Prophets & Messengers</TabsTrigger>
-            <TabsTrigger value="sahaba">The Companions (Sahaba)</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 h-auto">
+            <TabsTrigger value="prophets" className="text-xs sm:text-sm whitespace-normal py-2">
+              Prophets & Messengers
+            </TabsTrigger>
+            <TabsTrigger value="sahaba" className="text-xs sm:text-sm whitespace-normal py-2">
+              The Companions (Sahaba)
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 

@@ -173,7 +173,7 @@ export default function GuidancePage() {
               </div>
               
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>

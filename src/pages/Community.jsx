@@ -107,7 +107,7 @@ export default function CommunityPage() {
                     <button
                       key={filter}
                       onClick={() => setActiveFilter(filter)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      className={`px-3 py-2 rounded-full text-xs font-medium border transition-colors ${
                         activeFilter === filter
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-card text-muted-foreground border-border hover:bg-secondary"

@@ -130,7 +130,7 @@ export default function NamesPage() {
 
         {filteredNames.length === 0 && !isLoading && (
           <Card className="bg-card border-border glow-shadow">
-            <CardContent className="p-12 text-center">
+            <CardContent className="p-6 sm:p-12 text-center">
               <Search className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="font-display text-xl font-medium text-primary mb-2">No Names Found</h3>
               <p className="text-muted-foreground">Try adjusting your search terms</p>

@@ -211,7 +211,7 @@ export default function SeerahPage() {
             <p className="text-foreground/80 mb-4">
               Explore more about the Prophet's life, his companions, and his teachings
             </p>
-            <div className="flex justify-center gap-3">
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
               <Button variant="outline">Read Hadith Collection</Button>
               <Button>Watch Seerah Videos</Button>
             </div>

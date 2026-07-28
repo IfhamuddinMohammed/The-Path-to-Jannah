@@ -32,7 +32,7 @@ export default function EtiquetteBanner() {
       <button
         onClick={dismiss}
         aria-label="Dismiss"
-        className="text-muted-foreground hover:text-foreground shrink-0"
+        className="p-2 -m-2 text-muted-foreground hover:text-foreground shrink-0"
       >
         <X className="w-4 h-4" />
       </button>

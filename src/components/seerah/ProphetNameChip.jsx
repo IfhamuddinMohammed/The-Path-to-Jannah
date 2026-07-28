@@ -5,7 +5,7 @@ export default function ProphetNameChip({ name }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button>
+        <button className="p-1 -m-1">
           <Badge
             variant="outline"
             className="text-primary border-primary/20 hover:bg-primary/10 hover:border-primary/40 transition-colors cursor-pointer"

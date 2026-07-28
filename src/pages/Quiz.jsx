@@ -181,7 +181,7 @@ export default function QuizPage() {
                       key={index}
                       variant={selectedAnswer === option ? "default" : "outline"}
                       onClick={() => handleAnswerSelect(option)}
-                      className="w-full text-left justify-start h-auto py-4 px-6"
+                      className="w-full text-left justify-start h-auto py-4 px-6 whitespace-normal break-words"
                     >
                       {option}
                     </Button>

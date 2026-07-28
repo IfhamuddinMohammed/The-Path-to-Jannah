@@ -96,9 +96,9 @@ export default function FiqhPage() {
               return (
                 <Card key={category.key}>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <Icon className="w-6 h-6 text-primary" />
-                      <span>{category.label}</span>
+                    <CardTitle className="flex items-center gap-3 flex-wrap">
+                      <Icon className="w-6 h-6 text-primary shrink-0" />
+                      <span className="min-w-0">{category.label}</span>
                       <Badge className={category.color}>{category.topics.length} Topics</Badge>
                     </CardTitle>
                   </CardHeader>

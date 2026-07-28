@@ -40,7 +40,7 @@ export default function VideosPage() {
   const uniqueScholars = [...new Set(videos.map(v => v.scholar).filter(Boolean))];
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <VideoIcon className="w-16 h-16 mx-auto text-primary mb-4" />

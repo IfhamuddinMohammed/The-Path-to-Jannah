@@ -51,7 +51,7 @@ export default function NewMuslimsPage() {
         </div>
 
         <Card className="mb-8 bg-secondary border-border">
-          <CardContent className="p-8 text-center">
+          <CardContent className="p-6 sm:p-8 text-center">
             <h3 className="font-display text-2xl font-bold text-primary mb-4">
               Assalamu Alaikum - Peace be upon you!
             </h3>
@@ -139,7 +139,7 @@ export default function NewMuslimsPage() {
         </div>
 
         <Card className="mt-8 bg-primary text-primary-foreground">
-          <CardContent className="p-8 text-center">
+          <CardContent className="p-6 sm:p-8 text-center">
             <h3 className="font-display text-2xl font-bold mb-4">Remember</h3>
             <div className="max-w-2xl mx-auto space-y-4">
               <p className="text-primary-foreground/80">
