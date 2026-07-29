@@ -8,6 +8,7 @@ export const kidsStories = [
     ageGroup: "5-8",
     summary: "Prophet Yunus (peace be upon him) learned a beautiful lesson about patience inside the belly of a great fish.",
     moral: "Allah always hears us when we call upon Him with a sincere heart.",
+    discussionPrompt: "What do you think Yunus felt inside the fish, and why did he keep talking to Allah even then?",
     pages: [
       "A long time ago, there was a kind Prophet named Yunus (peace be upon him). He was sent to teach his people about Allah, but they would not listen to him.",
       "Yunus felt very sad, so he left his city and got on a ship to sail away. But a huge storm came, and the sailors said someone must go into the sea to make the ship lighter.",
@@ -25,6 +26,7 @@ export const kidsStories = [
     ageGroup: "6-10",
     summary: "Young Prophet Ibrahim (peace be upon him) bravely showed his people that stone idols could never be gods.",
     moral: "Always stand up for the truth, even if you are the only one who believes it.",
+    discussionPrompt: "Can you think of a time you had to be brave and tell the truth, even if others didn't agree?",
     pages: [
       "Prophet Ibrahim (peace be upon him) grew up in a town where people worshipped statues made of stone, called idols. Even as a boy, Ibrahim knew this was wrong.",
       "He looked at the stars, the moon, and the sun and wondered which was his Lord. But each one set and disappeared. Ibrahim realized only the One who created them all deserved worship — Allah.",
@@ -42,6 +44,7 @@ export const kidsStories = [
     ageGroup: "5-8",
     summary: "Allah gave Prophet Sulaiman (peace be upon him) the gift of understanding the language of animals — including a very wise little ant!",
     moral: "Every creature, no matter how small, deserves kindness and respect.",
+    discussionPrompt: "How can we be gentle and caring toward small creatures like ants and insects in our own garden?",
     pages: [
       "Prophet Sulaiman (peace be upon him) was given a very special gift by Allah — he could understand the speech of birds, animals, and even insects.",
       "One day, Sulaiman was marching with his huge army of soldiers, jinn, and birds through a valley full of ants.",
@@ -59,6 +62,7 @@ export const kidsStories = [
     ageGroup: "6-10",
     summary: "A powerful army with a giant elephant once tried to destroy the Kaaba — but Allah protected His sacred House in an amazing way.",
     moral: "Allah is the greatest protector, and no army is more powerful than His will.",
+    discussionPrompt: "Why do you think Allah chose small birds and stones to protect the Kaaba instead of a bigger army?",
     pages: [
       "Before the Prophet Muhammad ﷺ was born, a powerful king named Abraha had a huge army with a giant elephant. He wanted to destroy the Kaaba in Makkah.",
       "The people of Makkah could not fight such a huge army, so they simply prayed to Allah to protect His sacred House.",
@@ -76,6 +80,7 @@ export const kidsStories = [
     ageGroup: "5-9",
     summary: "Long before he became a Prophet, young Muhammad ﷺ was so honest that everyone in Makkah gave him a special nickname.",
     moral: "Honesty builds trust that lasts a lifetime.",
+    discussionPrompt: "What are some ways we can show people that they can always trust us, just like Al-Amin?",
     pages: [
       "Even as a young man, Muhammad ﷺ was known throughout Makkah for always telling the truth and never breaking a promise.",
       "People would ask him to keep their valuables safe for them, because they knew he would never take anything that wasn't his.",
@@ -93,6 +98,7 @@ export const kidsStories = [
     ageGroup: "7-12",
     summary: "Prophet Yusuf (peace be upon him) went through many hardships, but he forgave those who hurt him with a beautiful, generous heart.",
     moral: "Forgiveness and patience turn hardship into a happy ending.",
+    discussionPrompt: "Why is it sometimes hard to forgive someone, and how did forgiving his brothers make Yusuf's life better?",
     pages: [
       "When Yusuf was young, he dreamed that eleven stars, the sun, and the moon bowed down to him. His father told him to keep this dream secret.",
       "Yusuf's own brothers were jealous of him and threw him into a deep well, then told their father he had been lost.",
