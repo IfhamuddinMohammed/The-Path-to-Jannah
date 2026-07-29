@@ -6,10 +6,30 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Sun, ArrowRight, Clock, User, BookOpen } from "lucide-react";
+import { Search, Sun, ArrowRight, Clock, User, BookOpen, Bookmark, BookmarkCheck, Languages } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
+import { useArticleBookmarks } from "@/hooks/useArticleBookmarks";
+import { cn } from "@/lib/utils";
+
+// This page is for guidance essays only — "prophets" and "sahaba" articles
+// belong to the dedicated Stories page and are excluded here so the two
+// sections don't show duplicate/overlapping content.
+const GUIDANCE_CATEGORIES = [
+  "guidance",
+  "akhlaq",
+  "repentance",
+  "respect",
+  "family-parenting",
+  "youth-corner",
+  "self-development",
+  "sunnah-habits",
+  "charity",
+  "consequences",
+  "rewards",
+  "daily-life",
+];
 
 export default function GuidancePage() {
   const [articles, setArticles] = useState([]);
@@ -17,14 +37,24 @@ export default function GuidancePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [contentLanguage, setContentLanguage] = useState("english");
+  const isRomanUrdu = contentLanguage === "roman_urdu";
+  const { isBookmarked, toggleBookmark } = useArticleBookmarks();
 
   useEffect(() => {
     const loadArticles = async () => {
       setIsLoading(true);
       try {
-        const filters = selectedCategory === "all" ? {} : { category: selectedCategory };
+        const isSpecialView = selectedCategory === "all" || selectedCategory === "saved";
+        const filters = isSpecialView ? {} : { category: selectedCategory };
         const data = await Article.filter(filters, '-created_date', 50);
-        setArticles(data);
+        let scoped = isSpecialView
+          ? data.filter((a) => GUIDANCE_CATEGORIES.includes(a.category))
+          : data;
+        if (selectedCategory === "saved") {
+          scoped = scoped.filter((a) => isBookmarked(a.id));
+        }
+        setArticles(scoped);
       } catch (error) {
         console.error("Error loading articles:", error);
       }
@@ -32,15 +62,19 @@ export default function GuidancePage() {
     };
 
     loadArticles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
+
+  const describe = (article) => (isRomanUrdu && article.content_roman_urdu) || article.content;
 
   const filteredArticles = articles.filter(article =>
     article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    article.content.toLowerCase().includes(searchQuery.toLowerCase())
+    describe(article).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const categories = [
     { value: "all", label: "All Categories" },
+    { value: "saved", label: "⭐ Saved Articles" },
     { value: "guidance", label: "General Guidance" },
     { value: "akhlaq", label: "Good Character (Akhlaq)" },
     { value: "repentance", label: "Repentance & Forgiveness" },
@@ -80,20 +114,30 @@ export default function GuidancePage() {
   };
 
   if (selectedArticle) {
+    const bookmarked = isBookmarked(selectedArticle.id);
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-4xl mx-auto">
-          <Button
-            variant="outline"
-            onClick={() => setSelectedArticle(null)}
-            className="mb-6"
-          >
-            ← Back to Articles
-          </Button>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-6">
+            <Button variant="outline" onClick={() => setSelectedArticle(null)}>
+              ← Back to Articles
+            </Button>
+            <div className="flex items-center gap-2">
+              <LanguagePills value={contentLanguage} onChange={setContentLanguage} />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => toggleBookmark(selectedArticle.id)}
+                className={bookmarked ? "text-accent" : undefined}
+              >
+                {bookmarked ? <BookmarkCheck className="w-4 h-4 fill-current" /> : <Bookmark className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
 
           <Card className="border-border glow-shadow">
             <CardHeader className="pb-6">
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-2 mb-4 flex-wrap">
                 <Badge className={getCategoryColor(selectedArticle.category)}>
                   {selectedArticle.category.replace('-', ' ')}
                 </Badge>
@@ -118,7 +162,7 @@ export default function GuidancePage() {
 
             <CardContent>
               <div className="prose max-w-none">
-                <ReactMarkdown>{selectedArticle.content}</ReactMarkdown>
+                <ReactMarkdown>{describe(selectedArticle)}</ReactMarkdown>
               </div>
 
               {selectedArticle.tags && selectedArticle.tags.length > 0 && (
@@ -154,6 +198,9 @@ export default function GuidancePage() {
             Authentic Islamic guidance for living according to the Qur'an and Sunnah.
             Learn how to walk the path of righteousness with wisdom and compassion.
           </p>
+          <div className="flex justify-center mt-4">
+            <LanguagePills value={contentLanguage} onChange={setContentLanguage} />
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -236,14 +283,34 @@ export default function GuidancePage() {
                 )}
 
                 <CardHeader>
-                  <div className="flex gap-2 mb-3">
-                    <Badge className={getCategoryColor(article.category)}>
-                      {article.category.replace('-', ' ')}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {format(new Date(article.created_date), "MMM d")}
-                    </Badge>
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex gap-2 flex-wrap">
+                      <Badge className={getCategoryColor(article.category)}>
+                        {article.category.replace('-', ' ')}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {format(new Date(article.created_date), "MMM d")}
+                      </Badge>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleBookmark(article.id);
+                      }}
+                      className={cn(
+                        "shrink-0 text-muted-foreground hover:text-accent transition-colors",
+                        isBookmarked(article.id) && "text-accent"
+                      )}
+                      aria-label={isBookmarked(article.id) ? "Remove bookmark" : "Bookmark article"}
+                    >
+                      {isBookmarked(article.id) ? (
+                        <BookmarkCheck className="w-4 h-4 fill-current" />
+                      ) : (
+                        <Bookmark className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
 
                   <CardTitle className="text-lg font-display text-primary leading-tight hover:text-primary/80">
@@ -253,7 +320,7 @@ export default function GuidancePage() {
 
                 <CardContent>
                   <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                    {article.content.substring(0, 150)}...
+                    {describe(article).substring(0, 150)}...
                   </p>
 
                   <div className="flex items-center justify-between">
@@ -273,6 +340,37 @@ export default function GuidancePage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function LanguagePills({ value, onChange }) {
+  return (
+    <div className="inline-flex p-1 rounded-full bg-muted border border-border shrink-0">
+      <button
+        type="button"
+        onClick={() => onChange("english")}
+        className={cn(
+          "px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5",
+          value === "english"
+            ? "bg-accent text-accent-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <Languages className="w-3.5 h-3.5" /> English
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("roman_urdu")}
+        className={cn(
+          "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+          value === "roman_urdu"
+            ? "bg-accent text-accent-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        Roman Urdu
+      </button>
     </div>
   );
 }
