@@ -26,9 +26,12 @@ import Quiz from './pages/Quiz';
 import Kids from './pages/Kids';
 import NewMuslims from './pages/NewMuslims';
 import Fiqh from './pages/Fiqh';
+import Huqooq from './pages/Huqooq';
 import About from './pages/About';
 import { AdhaanProvider } from '@/hooks/useAdhaan';
 import AdhaanBanner from '@/components/adhaan/AdhaanBanner';
+import { QuranAudioProvider } from '@/hooks/useQuranAudio';
+import { useHardwareBackButton } from '@/hooks/useHardwareBackButton';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -77,6 +80,7 @@ const AuthenticatedApp = () => {
         <Route path="/Kids" element={<Kids />} />
         <Route path="/NewMuslims" element={<NewMuslims />} />
         <Route path="/Fiqh" element={<Fiqh />} />
+        <Route path="/Huqooq" element={<Huqooq />} />
         <Route path="/About" element={<About />} />
         {/* Add your page Route elements here */}
       </Route>
@@ -87,16 +91,19 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  useHardwareBackButton();
 
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
           <AdhaanProvider>
-            <Router>
-              <ScrollToTop />
-              <AuthenticatedApp />
-            </Router>
+            <QuranAudioProvider>
+              <Router>
+                <ScrollToTop />
+                <AuthenticatedApp />
+              </Router>
+            </QuranAudioProvider>
             <AdhaanBanner />
           </AdhaanProvider>
           <Toaster />

@@ -24,6 +24,7 @@ import {
   Info,
   CircleDashed,
   X,
+  HeartHandshake,
 } from "lucide-react";
 import {
   Sidebar,
@@ -44,6 +45,8 @@ import Breadcrumbs from "@/components/layout/Breadcrumbs";
 import GlobalSearch from "@/components/layout/GlobalSearch";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import QuranMiniPlayer from "@/components/quran/QuranMiniPlayer";
+import { useQuranAudio } from "@/hooks/useQuranAudio";
 
 const navigationItems = [
   { title: "Home", url: createPageUrl("Home"), icon: Sparkles, group: "main" },
@@ -62,6 +65,7 @@ const navigationItems = [
   { title: "Kids Corner", url: createPageUrl("Kids"), icon: Baby, group: "special" },
   { title: "New Muslims", url: createPageUrl("NewMuslims"), icon: Heart, group: "special" },
   { title: "Fiqh Rulings", url: createPageUrl("Fiqh"), icon: Scale, group: "special" },
+  { title: "Huqooq", url: createPageUrl("Huqooq"), icon: HeartHandshake, group: "special" },
   { title: "FAQ", url: createPageUrl("FAQ"), icon: ShieldQuestion, group: "support" },
   { title: "Community", url: createPageUrl("Community"), icon: Users, group: "support" },
   { title: "About", url: createPageUrl("About"), icon: Info, group: "support" },
@@ -118,6 +122,7 @@ const MENU_HINT_KEY = "sirat_menu_hint_seen";
 export default function Layout() {
   const location = useLocation();
   const [showMenuHint, setShowMenuHint] = useState(false);
+  const { nowPlaying } = useQuranAudio();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -259,14 +264,20 @@ export default function Layout() {
             </div>
           </header>
 
-          {/* Page Content — extra bottom padding on mobile for bottom nav */}
-          <div className="flex-1 overflow-auto pb-16 md:pb-0">
+          {/* Page Content — extra bottom padding on mobile for bottom nav, plus
+              more when the Qur'an mini player is docked above it */}
+          <div
+            className={`flex-1 overflow-auto ${
+              nowPlaying ? "pb-36 md:pb-20" : "pb-16 md:pb-0"
+            }`}
+          >
             <Outlet />
           </div>
         </main>
 
         {/* Mobile Bottom Navigation */}
         <MobileBottomNav />
+        <QuranMiniPlayer />
       </div>
     </SidebarProvider>
   );
