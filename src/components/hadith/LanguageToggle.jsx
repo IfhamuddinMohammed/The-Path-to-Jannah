@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-const LANGUAGE_MODES = ["Arabic + English", "Roman Urdu", "Urdu (اردو)", "Arabic Only"];
+const LANGUAGE_MODES = ["Arabic + English", "Urdu (اردو)", "Arabic Only"];
 
 export default function LanguageToggle({ value, onChange }) {
   return (

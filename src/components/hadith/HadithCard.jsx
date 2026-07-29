@@ -7,7 +7,6 @@ import { useToast } from "@/components/ui/use-toast";
 
 const TRANSLATION_FIELD = {
   "Arabic + English": "english",
-  "Roman Urdu": "romanUrdu",
   "Urdu (اردو)": "urdu",
   "Arabic Only": null,
 };
@@ -61,17 +60,21 @@ export default function HadithCard({ hadith, language }) {
       <CardHeader>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="font-display text-lg text-primary">{hadith.reference}</CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-              <CheckCircle2 className="w-3 h-3 mr-1" />
-              {hadith.authenticity}
-            </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            {hadith.authenticity && (
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                {hadith.authenticity}
+              </Badge>
+            )}
             <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
               {hadith.collection}
             </Badge>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground font-body">Narrated by {hadith.narrator}:</p>
+        {hadith.narrator && (
+          <p className="text-sm text-muted-foreground font-body">Narrated by {hadith.narrator}:</p>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-xl arabic-font text-accent text-right leading-loose">{hadith.arabic}</p>
@@ -85,7 +88,17 @@ export default function HadithCard({ hadith, language }) {
           </p>
         )}
 
-        <div className="flex items-center gap-1 pt-2 border-t border-border">
+        {hadith.grades?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {hadith.grades.map((g, i) => (
+              <Badge key={i} variant="outline" className="text-xs bg-secondary text-secondary-foreground border-border">
+                {g.name}: {g.grade}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center gap-1 pt-2 border-t border-border flex-wrap">
           <Button variant="ghost" size="sm" onClick={handleCopy}>
             <Copy className="w-4 h-4 mr-1.5" />
             Copy
