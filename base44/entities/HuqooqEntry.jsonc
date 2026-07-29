@@ -1,0 +1,41 @@
+{
+  "name": "HuqooqEntry",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": ["mutual", "wife", "husband", "parents", "dispute_resolution"],
+      "description": "Which Huqooq (Rights & Duties) section this entry belongs to"
+    },
+    "theme": {
+      "type": "string",
+      "description": "Short theme/title for this right or duty"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["Quran", "Hadith", "Fiqh"],
+      "description": "Whether this entry comes from the Qur'an, a Hadith collection, or a classical juristic (fiqh) position not directly quoting scripture"
+    },
+    "reference": {
+      "type": "string",
+      "description": "The specific reference, e.g. 'Surah Ar-Rum [30:21]' or 'Sahih Muslim 1218 (Farewell Sermon)'"
+    },
+    "text_arabic": {
+      "type": "string",
+      "description": "The Arabic text of the verse or hadith"
+    },
+    "text_english": {
+      "type": "string",
+      "description": "The English translation"
+    },
+    "text_roman_urdu": {
+      "type": "string",
+      "description": "The Roman Urdu (Latin-script Urdu) translation"
+    },
+    "authenticity_notes": {
+      "type": "string",
+      "description": "Notes on authenticity/grading, e.g. 'Sahih (Authentic)' or 'Muttafaqun Alayh'"
+    }
+  },
+  "required": ["category", "theme", "source_type", "reference", "text_arabic", "text_english", "text_roman_urdu"]
+}
