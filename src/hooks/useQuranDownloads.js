@@ -13,7 +13,16 @@ import {
   getSurah,
   getAudio,
 } from "@/lib/quranDB";
-import { getAyahAudioUrl } from "@/lib/quranAudio";
+import { getVoiceAudioUrl, getVoiceDownloadUrl, getVoiceKey } from "@/lib/quranAudio";
+
+// Surahs downloaded before per-voice tracking only ever stored a single
+// Arabic `reciter` string — read that back as this voice's one downloaded key.
+function getDownloadedVoiceKeys(surahData) {
+  if (!surahData) return [];
+  if (surahData.downloadedVoices) return surahData.downloadedVoices;
+  if (surahData.reciter) return [surahData.reciter];
+  return [];
+}
 
 const BATCH_SIZE = 5;
 
@@ -57,19 +66,40 @@ async function saveBlobToDevice(blob, filename) {
 }
 
 export function useQuranDownloads() {
-  const [downloadedSurahs, setDownloadedSurahs] = useState(new Set());
+  // { [surahNumber]: Set<voiceKey> } — which voices (Arabic reciter, or
+  // "urdu"/"english") have been downloaded for each surah.
+  const [downloadedVoicesBySurah, setDownloadedVoicesBySurah] = useState({});
   const [downloadProgress, setDownloadProgress] = useState(null);
   const [deviceDownloadProgress, setDeviceDownloadProgress] = useState(null);
 
   useEffect(() => {
-    getDownloadedSurahNumbers()
-      .then((keys) => setDownloadedSurahs(new Set(keys)))
-      .catch(() => {});
+    (async () => {
+      try {
+        const surahNumbers = await getDownloadedSurahNumbers();
+        const entries = await Promise.all(
+          surahNumbers.map(async (surahNumber) => {
+            const data = await getSurah(surahNumber);
+            return [surahNumber, new Set(getDownloadedVoiceKeys(data))];
+          })
+        );
+        setDownloadedVoicesBySurah(Object.fromEntries(entries));
+      } catch {
+        // ignore
+      }
+    })();
   }, []);
 
+  // Without a voice, reports whether ANY voice has been downloaded for this
+  // surah (used for the surah-list checkmark). With a voice, reports whether
+  // that specific voice is downloaded (used for the "Offline" badge/button,
+  // which reflects whichever language/reciter is currently selected).
   const isDownloaded = useCallback(
-    (surahNumber) => downloadedSurahs.has(surahNumber),
-    [downloadedSurahs]
+    (surahNumber, voice) => {
+      const voices = downloadedVoicesBySurah[surahNumber];
+      if (!voices || voices.size === 0) return false;
+      return voice ? voices.has(getVoiceKey(voice)) : true;
+    },
+    [downloadedVoicesBySurah]
   );
 
   // Helper: get verse data from IndexedDB or API
@@ -100,8 +130,10 @@ export function useQuranDownloads() {
     }));
   }, []);
 
-  // Download surah text + audio to IndexedDB (offline mode within the app)
-  const downloadSurah = useCallback(async (surahNumber, reciter) => {
+  // Download surah text + this voice's audio to IndexedDB (offline mode within
+  // the app). `voice` is { language, reciter } — text is shared across voices,
+  // but each voice's audio is fetched and cached separately.
+  const downloadSurah = useCallback(async (surahNumber, voice) => {
     try {
       const res = await fetch(
         `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,en.sahih,en.transliteration,ur.jalandhry`
@@ -127,12 +159,13 @@ export function useQuranDownloads() {
 
       setDownloadProgress({ surahNumber, current: 0, total: verses.length });
 
+      const voiceKey = getVoiceKey(voice);
       for (let i = 0; i < verses.length; i += BATCH_SIZE) {
         const batch = verses.slice(i, i + BATCH_SIZE);
         await Promise.all(
           batch.map(async (verse) => {
-            const audioUrl = getAyahAudioUrl(surahNumber, verse.numberInSurah, reciter);
-            const audioKey = `${reciter}-${verse.number}`;
+            const audioUrl = getVoiceDownloadUrl(surahNumber, verse.numberInSurah, voice);
+            const audioKey = `${voiceKey}-${verse.number}`;
             try {
               const audioRes = await fetch(audioUrl);
               if (!audioRes.ok) throw new Error(`HTTP ${audioRes.status}`);
@@ -150,9 +183,12 @@ export function useQuranDownloads() {
         });
       }
 
-      await saveSurah(surahNumber, { verses, reciter });
+      const existing = await getSurah(surahNumber);
+      const downloadedVoices = new Set(getDownloadedVoiceKeys(existing));
+      downloadedVoices.add(voiceKey);
+      await saveSurah(surahNumber, { verses, downloadedVoices: Array.from(downloadedVoices) });
 
-      setDownloadedSurahs((prev) => new Set(prev).add(surahNumber));
+      setDownloadedVoicesBySurah((prev) => ({ ...prev, [surahNumber]: downloadedVoices }));
     } catch (error) {
       console.error("Download failed:", error);
     } finally {
@@ -164,13 +200,14 @@ export function useQuranDownloads() {
   // Returns a result summary so the caller can surface success/failure to the user
   // instead of a single flaky verse silently voiding the whole download.
   const downloadSurahToDevice = useCallback(
-    async (surahNumber, reciter, surahName) => {
+    async (surahNumber, voice, surahName) => {
       try {
         const verses = await getVersesData(surahNumber);
         setDeviceDownloadProgress({ current: 0, total: verses.length });
 
         const blobs = [];
         let failedCount = 0;
+        const voiceKey = getVoiceKey(voice);
 
         for (let i = 0; i < verses.length; i += BATCH_SIZE) {
           const batch = verses.slice(i, i + BATCH_SIZE);
@@ -178,10 +215,10 @@ export function useQuranDownloads() {
             batch.map(async (verse) => {
               try {
                 // Try IndexedDB first (already downloaded offline)
-                let blob = await getAudio(`${reciter}-${verse.number}`);
+                let blob = await getAudio(`${voiceKey}-${verse.number}`);
                 if (!blob) {
                   const audioRes = await fetch(
-                    getAyahAudioUrl(surahNumber, verse.numberInSurah, reciter)
+                    getVoiceDownloadUrl(surahNumber, verse.numberInSurah, voice)
                   );
                   if (!audioRes.ok) throw new Error(`HTTP ${audioRes.status}`);
                   blob = await audioRes.blob();
@@ -346,31 +383,38 @@ export function useQuranDownloads() {
     [getVersesData]
   );
 
-  const removeDownload = useCallback(async (surahNumber) => {
+  // Removes only the given voice's cached audio. If no voice is left
+  // downloaded for this surah afterwards, the cached text is removed too.
+  const removeDownload = useCallback(async (surahNumber, voice) => {
     try {
       const surahData = await getSurah(surahNumber);
-      const reciter = surahData?.reciter || "mishary";
+      const voiceKey = getVoiceKey(voice);
 
       if (surahData?.verses) {
         for (const verse of surahData.verses) {
-          await deleteAudio(`${reciter}-${verse.number}`);
+          await deleteAudio(`${voiceKey}-${verse.number}`);
         }
       }
 
-      await deleteSurah(surahNumber);
+      const remainingVoices = new Set(getDownloadedVoiceKeys(surahData));
+      remainingVoices.delete(voiceKey);
 
-      setDownloadedSurahs((prev) => {
-        const next = new Set(prev);
-        next.delete(surahNumber);
-        return next;
-      });
+      if (remainingVoices.size === 0) {
+        await deleteSurah(surahNumber);
+      } else {
+        await saveSurah(surahNumber, {
+          verses: surahData.verses,
+          downloadedVoices: Array.from(remainingVoices),
+        });
+      }
+
+      setDownloadedVoicesBySurah((prev) => ({ ...prev, [surahNumber]: remainingVoices }));
     } catch (error) {
       console.error("Remove failed:", error);
     }
   }, []);
 
   return {
-    downloadedSurahs,
     isDownloaded,
     downloadSurah,
     removeDownload,

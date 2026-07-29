@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import {
   FileText,
   ArrowLeft,
   ArrowRight,
+  Languages,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,6 +38,8 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import VerseCard from "@/components/quran/VerseCard";
 import { useQuranDownloads } from "@/hooks/useQuranDownloads";
 import { useRomanUrdu } from "@/hooks/useRomanUrdu";
+import { useQuranAudio } from "@/hooks/useQuranAudio";
+import { AUDIO_LANGUAGES, TRANSLATION_AUDIO_EDITIONS } from "@/lib/quranAudio";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -125,14 +128,16 @@ export default function QuranPage() {
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReciter, setSelectedReciter] = useState("mishary");
+  const [audioLanguage, setAudioLanguage] = useState("arabic");
   const [activeTab, setActiveTab] = useState("translation");
   const [readingMode, setReadingMode] = useState("verse");
-  const [currentPlaying, setCurrentPlaying] = useState(null);
-  const audioRef = useRef(null);
+  const { nowPlaying, toggleVerse: toggleAudioVerse, pause: pauseAudio, resume: resumeAudio } =
+    useQuranAudio();
 
   const { verses, loading, error, retry, isOffline } = useQuranVerses(
     selectedSurah?.id,
-    selectedReciter
+    selectedReciter,
+    audioLanguage
   );
   const {
     isVerseBookmarked,
@@ -157,68 +162,50 @@ export default function QuranPage() {
     activeTab === "romanurdu"
   );
 
+  // Note: switching surah/reciter/tab intentionally does NOT touch playback —
+  // audio lives in QuranAudioProvider and keeps playing independent of what's
+  // being browsed, like a normal music player.
   useEffect(() => {
-    setCurrentPlaying(null);
-    audioRef.current?.pause();
     if (selectedSurah) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [selectedSurah?.id]);
 
-  useEffect(() => {
-    audioRef.current?.pause();
-    setCurrentPlaying(null);
-  }, [selectedReciter]);
-
-  useEffect(() => {
-    audioRef.current?.pause();
-    setCurrentPlaying(null);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (currentPlaying !== null && verses && audioRef.current) {
-      audioRef.current.src = verses[currentPlaying].audio;
-      audioRef.current.play().catch(() => setCurrentPlaying(null));
-    }
-  }, [currentPlaying]);
+  const surahMeta = selectedSurah
+    ? { id: selectedSurah.id, name: selectedSurah.name, arabic: selectedSurah.arabic }
+    : null;
+  const voice = { language: audioLanguage, reciter: selectedReciter };
+  const isThisSurahActive =
+    !!nowPlaying && !!selectedSurah && nowPlaying.surahId === selectedSurah.id;
+  const isThisSurahPlaying = isThisSurahActive && nowPlaying.isPlaying;
 
   const playVerse = (index) => {
-    if (!verses || !verses[index]) return;
-    if (currentPlaying === index) {
-      audioRef.current?.pause();
-      setCurrentPlaying(null);
-      return;
-    }
-    audioRef.current?.pause();
-    setCurrentPlaying(index);
+    if (!verses || !verses[index] || !surahMeta) return;
+    toggleAudioVerse(surahMeta, verses, index, voice);
   };
 
-  const playAll = () => {
-    if (verses && verses.length > 0) setCurrentPlaying(0);
-  };
-
-  const pauseAll = () => {
-    audioRef.current?.pause();
-    setCurrentPlaying(null);
-  };
-
-  const handleAudioEnded = () => {
-    if (currentPlaying !== null && verses && currentPlaying + 1 < verses.length) {
-      setCurrentPlaying(currentPlaying + 1);
-    } else {
-      setCurrentPlaying(null);
+  const handleHeaderPlayButton = () => {
+    if (!surahMeta) return;
+    if (isThisSurahActive) {
+      if (nowPlaying.isPlaying) {
+        pauseAudio();
+      } else {
+        resumeAudio();
+      }
+    } else if (verses && verses.length > 0) {
+      toggleAudioVerse(surahMeta, verses, 0, voice);
     }
   };
 
   const handleDownload = async () => {
     if (!selectedSurah) return;
-    await downloadSurah(selectedSurah.id, selectedReciter);
+    await downloadSurah(selectedSurah.id, voice);
     retry();
   };
 
   const handleRemoveDownload = async () => {
     if (!selectedSurah) return;
-    await removeDownload(selectedSurah.id);
+    await removeDownload(selectedSurah.id, voice);
     retry();
   };
 
@@ -226,7 +213,7 @@ export default function QuranPage() {
     if (!selectedSurah) return;
     const result = await downloadSurahToDevice(
       selectedSurah.id,
-      selectedReciter,
+      voice,
       selectedSurah.name
     );
     if (!result.success) {
@@ -359,7 +346,7 @@ export default function QuranPage() {
               key={`${verse.numberInSurah}-${index}`}
               verse={verse}
               surahName={selectedSurah?.name}
-              isPlaying={currentPlaying === actualIndex}
+              isPlaying={isThisSurahPlaying && nowPlaying.currentIndex === actualIndex}
               onTogglePlay={() => playVerse(actualIndex)}
               isBookmarked={isVerseBookmarked(
                 selectedSurah.id,
@@ -387,7 +374,6 @@ export default function QuranPage() {
 
   return (
     <div className="min-h-screen p-4 md:p-6">
-      <audio ref={audioRef} onEnded={handleAudioEnded} />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -421,20 +407,41 @@ export default function QuranPage() {
                 </div>
               </div>
 
-              <Select value={selectedReciter} onValueChange={setSelectedReciter}>
+              <Select value={audioLanguage} onValueChange={setAudioLanguage}>
                 <SelectTrigger className="w-full md:w-56">
-                  <Volume2 className="w-4 h-4 mr-2 text-accent" />
-                  <SelectValue placeholder="Reciter" />
+                  <Languages className="w-4 h-4 mr-2 text-accent" />
+                  <SelectValue placeholder="Listen in" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mishary">Mishary Al-Afasy</SelectItem>
-                  <SelectItem value="sudais">Abdul Rahman Al-Sudais</SelectItem>
-                  <SelectItem value="husary">Mahmoud Khalil Al-Husary</SelectItem>
-                  <SelectItem value="minshawi">
-                    Mohamed Siddiq Al-Minshawi
-                  </SelectItem>
+                  {AUDIO_LANGUAGES.map((lang) => (
+                    <SelectItem key={lang.id} value={lang.id}>
+                      {lang.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+
+              {audioLanguage === "arabic" ? (
+                <Select value={selectedReciter} onValueChange={setSelectedReciter}>
+                  <SelectTrigger className="w-full md:w-56">
+                    <Volume2 className="w-4 h-4 mr-2 text-accent" />
+                    <SelectValue placeholder="Reciter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mishary">Mishary Al-Afasy</SelectItem>
+                    <SelectItem value="sudais">Abdul Rahman Al-Sudais</SelectItem>
+                    <SelectItem value="husary">Mahmoud Khalil Al-Husary</SelectItem>
+                    <SelectItem value="minshawi">
+                      Mohamed Siddiq Al-Minshawi
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground w-full md:w-56 shrink-0">
+                  <Volume2 className="w-4 h-4 text-accent shrink-0" />
+                  Narrated by {TRANSLATION_AUDIO_EDITIONS[audioLanguage]?.narrator}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -537,21 +544,25 @@ export default function QuranPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {currentPlaying !== null ? (
-                        <Button variant="outline" size="sm" onClick={pauseAll}>
+                      {isThisSurahPlaying ? (
+                        <Button variant="outline" size="sm" onClick={handleHeaderPlayButton}>
                           <Pause className="w-4 h-4 mr-2" /> Pause
+                        </Button>
+                      ) : isThisSurahActive ? (
+                        <Button variant="outline" size="sm" onClick={handleHeaderPlayButton}>
+                          <Play className="w-4 h-4 mr-2" /> Resume
                         </Button>
                       ) : (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={playAll}
+                          onClick={handleHeaderPlayButton}
                           disabled={loading || !verses}
                         >
                           <Play className="w-4 h-4 mr-2" /> Play Surah
                         </Button>
                       )}
-                      {isDownloaded(selectedSurah.id) ? (
+                      {isDownloaded(selectedSurah.id, voice) ? (
                         <>
                           <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
                             <CheckCircle className="w-3 h-3 mr-1" /> Offline

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { getSurah, getAudio } from "@/lib/quranDB";
-import { getAyahAudioUrl } from "@/lib/quranAudio";
+import { getVoiceAudioUrl, getVoiceKey } from "@/lib/quranAudio";
 
 function stripBismillah(text, surahNumber, isFirstAyah) {
   if (!isFirstAyah || surahNumber === 1 || surahNumber === 9) return text;
@@ -15,7 +15,7 @@ function stripBismillah(text, surahNumber, isFirstAyah) {
   return text;
 }
 
-export function useQuranVerses(surahNumber, reciter) {
+export function useQuranVerses(surahNumber, reciter, audioLanguage = "arabic") {
   const [rawData, setRawData] = useState(null);
   const [offlineVerses, setOfflineVerses] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -52,22 +52,27 @@ export function useQuranVerses(surahNumber, reciter) {
       setRawData(null);
       setIsOffline(false);
 
-      // Try IndexedDB (offline) first
+      // Try IndexedDB (offline) first — text is shared across voices, but each
+      // voice (Arabic reciter, Urdu, English) caches its own audio separately.
       try {
         const surahData = await getSurah(surahNumber);
         if (cancelled) return;
 
         if (surahData && surahData.verses) {
+          const voiceKey = getVoiceKey({ language: audioLanguage, reciter });
           const verses = await Promise.all(
             surahData.verses.map(async (verse, i) => {
-              const audioKey = `${reciter}-${verse.number}`;
+              const audioKey = `${voiceKey}-${verse.number}`;
               const blob = await getAudio(audioKey);
               let audioUrl;
               if (blob) {
                 audioUrl = URL.createObjectURL(blob);
                 blobUrlsRef.current.push(audioUrl);
               } else {
-                audioUrl = getAyahAudioUrl(surahNumber, verse.numberInSurah, reciter);
+                audioUrl = getVoiceAudioUrl(surahNumber, verse.numberInSurah, {
+                  language: audioLanguage,
+                  reciter,
+                });
               }
               return {
                 ...verse,
@@ -122,7 +127,7 @@ export function useQuranVerses(surahNumber, reciter) {
     return () => {
       cancelled = true;
     };
-  }, [surahNumber, reciter, fetchKey]);
+  }, [surahNumber, reciter, audioLanguage, fetchKey]);
 
   const verses = useMemo(() => {
     if (offlineVerses) return offlineVerses;
@@ -141,10 +146,13 @@ export function useQuranVerses(surahNumber, reciter) {
         translation: englishEdition.ayahs[i]?.text || "",
         transliteration: transliterationEdition.ayahs[i]?.text || "",
         urdu: rawData[3]?.ayahs[i]?.text || "",
-        audio: getAyahAudioUrl(surahNumber, ayah.numberInSurah, reciter),
+        audio: getVoiceAudioUrl(surahNumber, ayah.numberInSurah, {
+          language: audioLanguage,
+          reciter,
+        }),
       };
     });
-  }, [offlineVerses, rawData, reciter, surahNumber]);
+  }, [offlineVerses, rawData, reciter, audioLanguage, surahNumber]);
 
   const retry = useCallback(() => {
     setFetchKey((k) => k + 1);

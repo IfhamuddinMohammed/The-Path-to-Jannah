@@ -2,8 +2,14 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { getRomanUrdu, saveRomanUrdu } from "@/lib/quranDB";
 
-const BATCH_SIZE = 15;
-const LLM_TIMEOUT_MS = 60000;
+// Resource 831 on quran.com: Abul Ala Maududi's published Roman Urdu translation
+// (authentic, human-translated Latin-script Urdu — not LLM-generated).
+const ROMAN_URDU_RESOURCE_ID = 831;
+const FETCH_TIMEOUT_MS = 60000;
+
+function stripHtml(text) {
+  return (text || "").replace(/<[^>]+>/g, "");
+}
 
 function withTimeout(promise, ms) {
   return Promise.race([
@@ -37,17 +43,16 @@ export function useRomanUrdu(surahNumber, verses, enabled) {
       setLoading(true);
       setError(null);
 
-      // 1. Check database entity (shared across ALL users — no per-user LLM calls)
+      // 1. Check database entity (shared across ALL users — no per-user LLM calls).
+      // One row per verse, so a long surah never risks hitting the per-field size
+      // limit a single JSON-blob-per-surah row would.
       try {
         const cached = await base44.entities.RomanUrduSurah.filter({
           surah_number: surahNumber,
         });
-        if (!cancelled && cached && cached.length > 0) {
-          const versesData = JSON.parse(cached[0].verses_data);
+        if (!cancelled && cached && cached.length >= verses.length) {
           const romanUrduVerses = verses.map((v) => {
-            const match = versesData.find(
-              (vd) => vd.ayah === v.numberInSurah
-            );
+            const match = cached.find((c) => c.ayah_number === v.numberInSurah);
             return { ...v, romanUrdu: match?.roman_urdu || "" };
           });
           setRomanUrdu(romanUrduVerses);
@@ -71,78 +76,41 @@ export function useRomanUrdu(surahNumber, verses, enabled) {
           return;
         }
       } catch {
-        // fall through to LLM generation
+        // fall through to fetching the translation
       }
 
-      // 3. Generate via LLM (first-time only — result gets saved to DB for all future users)
-      const urduTexts = verses.map((v) => v.urdu).filter(Boolean);
-      if (urduTexts.length === 0) {
-        if (!cancelled) {
-          setError("Urdu translation not available for this surah.");
-          setLoading(false);
-        }
-        return;
-      }
-
+      // 3. Fetch the published Roman Urdu translation (first-time only — result
+      // gets saved to DB for all future users)
       try {
-        const allTransliterations = [];
-
-        for (let i = 0; i < urduTexts.length; i += BATCH_SIZE) {
-          const batch = urduTexts.slice(i, i + BATCH_SIZE);
-          const result = await withTimeout(
-            base44.integrations.Core.InvokeLLM({
-              prompt: `You are an expert in Urdu-to-Roman-Urdu transliteration.
-
-Convert the following Urdu verses (in Arabic/Urdu script) to Roman Urdu (Latin script).
-
-Rules:
-- Use common South Asian Roman Urdu spelling conventions
-- Examples: "khuda" (خدا), "rasool" (رسول), "iman" (ایمان), "namaz" (نماز), "roza" (روزہ), "quran" (قرآن), "zindagi" (زندگی), "mabood" (معبود), "paighambar" (پیغمبر)
-- Keep the meaning and sentence structure intact
-- Add parenthetical alternatives for ambiguous words where helpful (e.g., "peeng(oongh)")
-
-Return a JSON object: { "verses": ["roman urdu verse 1", "roman urdu verse 2", ...] }
-
-Urdu verses to transliterate:
-${JSON.stringify(batch)}`,
-              response_json_schema: {
-                type: "object",
-                properties: {
-                  verses: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                },
-              },
-            }),
-            LLM_TIMEOUT_MS
-          );
-
-          if (cancelled) return;
-
-          const transliterations =
-            result?.verses || (Array.isArray(result) ? result : []);
-          allTransliterations.push(...transliterations);
-        }
+        const res = await withTimeout(
+          fetch(
+            `https://api.quran.com/api/v4/quran/translations/${ROMAN_URDU_RESOURCE_ID}?chapter_number=${surahNumber}`
+          ),
+          FETCH_TIMEOUT_MS
+        );
+        if (!res.ok) throw new Error("Network error");
+        const data = await res.json();
+        const translations = data?.translations || [];
 
         if (cancelled) return;
 
         const romanUrduVerses = verses.map((v, i) => ({
           ...v,
-          romanUrdu: allTransliterations[i] || "",
+          romanUrdu: stripHtml(translations[i]?.text),
         }));
 
-        // Save to database so ALL future users get it instantly (no LLM call needed)
+        // Save to database so ALL future users get it instantly (no external fetch needed).
+        // One row per verse (see the comment above on why not one blob per surah),
+        // written in a single bulk request so a 286-ayah surah doesn't fire 286
+        // concurrent requests and trip the API's rate limit.
         try {
-          const versesData = verses.map((v, i) => ({
-            ayah: v.numberInSurah,
-            roman_urdu: allTransliterations[i] || "",
-          }));
-          await base44.entities.RomanUrduSurah.create({
-            surah_number: surahNumber,
-            surah_name: verses[0]?.surahName || "",
-            verses_data: JSON.stringify(versesData),
-          });
+          await base44.entities.RomanUrduSurah.bulkCreate(
+            verses.map((v, i) => ({
+              surah_number: surahNumber,
+              ayah_number: v.numberInSurah,
+              roman_urdu: stripHtml(translations[i]?.text),
+            }))
+          );
         } catch {}
 
         // Save to IndexedDB (local offline cache)
@@ -156,7 +124,7 @@ ${JSON.stringify(batch)}`,
           setError(
             err?.message?.includes("timed out")
               ? "The request timed out. Please try again."
-              : "Failed to generate Roman Urdu translation. Please try again later."
+              : "Failed to load Roman Urdu translation. Please try again later."
           );
         }
       } finally {

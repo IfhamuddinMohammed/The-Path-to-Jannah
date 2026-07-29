@@ -6,17 +6,18 @@
       "type": "number",
       "description": "The surah number (1-114)"
     },
-    "surah_name": {
-      "type": "string",
-      "description": "The name of the surah"
+    "ayah_number": {
+      "type": "number",
+      "description": "The ayah number within the surah"
     },
-    "verses_data": {
+    "roman_urdu": {
       "type": "string",
-      "description": "JSON string of array: [{ayah: number, roman_urdu: string}]"
+      "description": "Roman Urdu (Latin-script) text for this single verse"
     }
   },
   "required": [
     "surah_number",
-    "verses_data"
+    "ayah_number",
+    "roman_urdu"
   ]
 }
