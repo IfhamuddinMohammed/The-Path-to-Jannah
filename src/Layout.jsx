@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -23,6 +23,7 @@ import {
   Radio,
   Info,
   CircleDashed,
+  X,
 } from "lucide-react";
 import {
   Sidebar,
@@ -112,8 +113,27 @@ function NavLink({ item, isActive }) {
   );
 }
 
+const MENU_HINT_KEY = "sirat_menu_hint_seen";
+
 export default function Layout() {
   const location = useLocation();
+  const [showMenuHint, setShowMenuHint] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem(MENU_HINT_KEY)) return;
+    const timer = setTimeout(() => setShowMenuHint(true), 900);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const dismissMenuHint = () => {
+    setShowMenuHint(false);
+    try {
+      localStorage.setItem(MENU_HINT_KEY, "true");
+    } catch {
+      // ignore
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -197,7 +217,30 @@ export default function Layout() {
           {/* Top Header with safe-area notch support */}
           <header className="pt-safe bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
             <div className="px-4 py-3 flex items-center gap-3">
-              <SidebarTrigger className="flex hover:bg-accent/10 p-2 rounded-lg transition-colors duration-200 shrink-0 no-select" />
+              <div className="relative shrink-0">
+                <SidebarTrigger
+                  className="flex hover:bg-accent/10 p-2 rounded-lg transition-colors duration-200 no-select"
+                  onClick={dismissMenuHint}
+                />
+                {showMenuHint && (
+                  <div className="md:hidden absolute left-0 top-full mt-2 z-50 w-60 animate-in fade-in slide-in-from-top-1">
+                    <div className="relative bg-primary text-primary-foreground text-sm rounded-xl px-3.5 py-2.5 shadow-lg">
+                      <div className="absolute -top-1.5 left-5 w-3 h-3 bg-primary rotate-45"></div>
+                      <p className="pr-4">
+                        Tap here to explore Qur'an, Duas, Prayer Times & more
+                      </p>
+                      <button
+                        type="button"
+                        onClick={dismissMenuHint}
+                        aria-label="Dismiss"
+                        className="absolute top-1.5 right-1.5 text-primary-foreground/70 hover:text-primary-foreground"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               {/* Mobile brand logo */}
               <div className="md:hidden flex items-center gap-2 shrink-0">
                 <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/70 rounded-full flex items-center justify-center glow-gold">
