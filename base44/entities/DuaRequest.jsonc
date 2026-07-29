@@ -1,0 +1,31 @@
+{
+  "name": "DuaRequest",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Poster's display name; omitted/empty when posted anonymously"
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["brother", "sister"],
+      "default": "brother",
+      "description": "Used for the 'Anonymous Brother/Sister' fallback label when posted anonymously"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["Health", "Family", "Guidance", "Provision", "General"],
+      "description": "Dua request category"
+    },
+    "request": {
+      "type": "string",
+      "description": "The dua request text"
+    },
+    "aameen_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of people who tapped Make Dua / said Aameen"
+    }
+  },
+  "required": ["category", "request"]
+}

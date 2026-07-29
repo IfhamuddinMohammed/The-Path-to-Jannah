@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Scale, ShieldQuestion, ChevronRight, Heart, MessageSquare } from "lucide-react";
 import { createPageUrl } from "@/utils";
-import { communityStats, dailyReflectionPrompt } from "@/data/communityData";
+import { dailyReflectionPrompt } from "@/data/communityData";
 
-export default function CommunitySidebar() {
+export default function CommunitySidebar({ stats = { duasToday: 0, activeDiscussions: 0 } }) {
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-accent/8 to-primary/8 border-border glow-shadow gold-border">
@@ -29,14 +29,14 @@ export default function CommunitySidebar() {
               <Heart className="w-4 h-4 text-accent" />
               Duas made today
             </div>
-            <span className="text-sm font-semibold text-primary">{communityStats.duasToday}</span>
+            <span className="text-sm font-semibold text-primary">{stats.duasToday}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MessageSquare className="w-4 h-4 text-accent" />
               Active discussions
             </div>
-            <span className="text-sm font-semibold text-primary">{communityStats.activeDiscussions}</span>
+            <span className="text-sm font-semibold text-primary">{stats.activeDiscussions}</span>
           </div>
         </CardContent>
       </Card>

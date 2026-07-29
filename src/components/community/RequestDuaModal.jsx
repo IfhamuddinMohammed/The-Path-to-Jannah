@@ -34,8 +34,6 @@ export default function RequestDuaModal({ open, onOpenChange, onSubmit }) {
       gender: "brother",
       category: form.category,
       request: form.request.trim(),
-      timeAgo: "Just now",
-      aameenCount: 0,
     });
     setForm(EMPTY_FORM);
     onOpenChange(false);

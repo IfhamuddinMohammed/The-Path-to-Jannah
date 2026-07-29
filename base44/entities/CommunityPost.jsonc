@@ -1,0 +1,36 @@
+{
+  "name": "CommunityPost",
+  "type": "object",
+  "properties": {
+    "author_name": {
+      "type": "string",
+      "default": "You",
+      "description": "Display name of the poster"
+    },
+    "author_role": {
+      "type": "string",
+      "default": "Community Member",
+      "description": "Poster's role/badge label (e.g. Community Member, Verified Helper)"
+    },
+    "section": {
+      "type": "string",
+      "enum": ["discussions", "new_muslims"],
+      "description": "Which Community tab this post belongs to"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["Reflection", "Verse Insight", "General Question"],
+      "description": "Post category"
+    },
+    "content": {
+      "type": "string",
+      "description": "Post body text"
+    },
+    "likes": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of likes"
+    }
+  },
+  "required": ["section", "category", "content"]
+}

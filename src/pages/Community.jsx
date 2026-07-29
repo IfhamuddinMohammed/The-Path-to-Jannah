@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Plus, Sprout } from "lucide-react";
 import EtiquetteBanner from "@/components/community/EtiquetteBanner";
 import DuaCard from "@/components/community/DuaCard";
@@ -8,32 +9,93 @@ import RequestDuaModal from "@/components/community/RequestDuaModal";
 import CreatePostCard from "@/components/community/CreatePostCard";
 import DiscussionPost from "@/components/community/DiscussionPost";
 import CommunitySidebar from "@/components/community/CommunitySidebar";
-import {
-  initialDuaRequests,
-  initialDiscussionPosts,
-  newMuslimPosts as initialNewMuslimPosts,
-  postFilters,
-} from "@/data/communityData";
+import { postFilters } from "@/data/communityData";
+import { DuaRequest, CommunityPost } from "@/entities/all";
+import { useToast } from "@/components/ui/use-toast";
+
+function isToday(dateString) {
+  if (!dateString) return false;
+  const d = new Date(dateString);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
 
 export default function CommunityPage() {
-  const [duaRequests, setDuaRequests] = useState(initialDuaRequests);
+  const [duaRequests, setDuaRequests] = useState([]);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
-
-  const [posts, setPosts] = useState(initialDiscussionPosts);
+  const [posts, setPosts] = useState([]);
+  const [newMuslimPosts, setNewMuslimPosts] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All Posts");
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const [newMuslimPosts, setNewMuslimPosts] = useState(initialNewMuslimPosts);
+  const loadAll = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [duas, discussionPosts, newMuslim] = await Promise.all([
+        DuaRequest.list("-created_date").catch(() => []),
+        CommunityPost.filter({ section: "discussions" }, "-created_date").catch(() => []),
+        CommunityPost.filter({ section: "new_muslims" }, "-created_date").catch(() => []),
+      ]);
+      setDuaRequests(duas);
+      setPosts(discussionPosts);
+      setNewMuslimPosts(newMuslim);
+    } catch (error) {
+      console.error("Error loading community data:", error);
+    }
+    setIsLoading(false);
+  }, []);
 
-  const addDuaRequest = (dua) => {
-    setDuaRequests((prev) => [{ ...dua, id: `local-${Date.now()}` }, ...prev]);
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
+
+  const addDuaRequest = async (dua) => {
+    try {
+      const created = await DuaRequest.create(dua);
+      setDuaRequests((prev) => [created, ...prev]);
+    } catch (error) {
+      console.error("Error posting dua request:", error);
+      toast({
+        variant: "destructive",
+        title: "Couldn't post your dua request",
+        description: "Please check your connection and try again.",
+      });
+    }
   };
 
-  const addPost = (post) => {
-    setPosts((prev) => [{ ...post, id: `local-${Date.now()}` }, ...prev]);
+  const addPost = async (post) => {
+    try {
+      const created = await CommunityPost.create({ ...post, section: "discussions" });
+      setPosts((prev) => [created, ...prev]);
+    } catch (error) {
+      console.error("Error posting discussion:", error);
+    }
   };
 
-  const addNewMuslimPost = (post) => {
-    setNewMuslimPosts((prev) => [{ ...post, id: `local-${Date.now()}` }, ...prev]);
+  const addNewMuslimPost = async (post) => {
+    try {
+      const created = await CommunityPost.create({ ...post, section: "new_muslims" });
+      setNewMuslimPosts((prev) => [created, ...prev]);
+    } catch (error) {
+      console.error("Error posting question:", error);
+    }
+  };
+
+  const handleAameenChange = (id, aameen_count) => {
+    setDuaRequests((prev) => prev.map((d) => (d.id === id ? { ...d, aameen_count } : d)));
+  };
+
+  const handleDiscussionLikeChange = (id, likes) => {
+    setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes } : p)));
+  };
+
+  const handleNewMuslimLikeChange = (id, likes) => {
+    setNewMuslimPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes } : p)));
   };
 
   const visiblePosts = useMemo(() => {
@@ -43,10 +105,18 @@ export default function CommunityPage() {
     } else if (activeFilter === "Questions") {
       list = list.filter((p) => p.category === "General Question");
     } else if (activeFilter === "Most Popular") {
-      list.sort((a, b) => b.likes - a.likes);
+      list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
     }
     return list;
   }, [posts, activeFilter]);
+
+  const stats = useMemo(
+    () => ({
+      duasToday: duaRequests.filter((d) => isToday(d.created_date)).length,
+      activeDiscussions: posts.length + newMuslimPosts.length,
+    }),
+    [duaRequests, posts, newMuslimPosts]
+  );
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
@@ -92,11 +162,23 @@ export default function CommunityPage() {
                     Request a Dua
                   </Button>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {duaRequests.map((dua) => (
-                    <DuaCard key={dua.id} dua={dua} />
-                  ))}
-                </div>
+                {isLoading ? (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {Array(4).fill(0).map((_, i) => (
+                      <Skeleton key={i} className="h-40 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : duaRequests.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {duaRequests.map((dua) => (
+                      <DuaCard key={dua.id} dua={dua} onAameenChange={handleAameenChange} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No dua requests yet — be the first to share what's on your heart.
+                  </div>
+                )}
               </TabsContent>
 
               {/* Discussions */}
@@ -117,11 +199,27 @@ export default function CommunityPage() {
                     </button>
                   ))}
                 </div>
-                <div className="space-y-4">
-                  {visiblePosts.map((post) => (
-                    <DiscussionPost key={post.id} post={post} />
-                  ))}
-                </div>
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {Array(3).fill(0).map((_, i) => (
+                      <Skeleton key={i} className="h-32 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : visiblePosts.length > 0 ? (
+                  <div className="space-y-4">
+                    {visiblePosts.map((post) => (
+                      <DiscussionPost
+                        key={post.id}
+                        post={post}
+                        onLikeChange={handleDiscussionLikeChange}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No discussions yet — share a reflection or ask a question to start one.
+                  </div>
+                )}
               </TabsContent>
 
               {/* New Muslims */}
@@ -137,17 +235,33 @@ export default function CommunityPage() {
                   onSubmit={addNewMuslimPost}
                   placeholder="Ask anything about Islam, prayer, or getting started — no question is too basic..."
                 />
-                <div className="space-y-4">
-                  {newMuslimPosts.map((post) => (
-                    <DiscussionPost key={post.id} post={post} />
-                  ))}
-                </div>
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {Array(2).fill(0).map((_, i) => (
+                      <Skeleton key={i} className="h-32 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : newMuslimPosts.length > 0 ? (
+                  <div className="space-y-4">
+                    {newMuslimPosts.map((post) => (
+                      <DiscussionPost
+                        key={post.id}
+                        post={post}
+                        onLikeChange={handleNewMuslimLikeChange}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No questions yet — be the first to ask, no question is too basic.
+                  </div>
+                )}
               </TabsContent>
             </div>
 
             {/* Sidebar */}
             <div className="hidden lg:block">
-              <CommunitySidebar />
+              <CommunitySidebar stats={stats} />
             </div>
           </div>
         </Tabs>

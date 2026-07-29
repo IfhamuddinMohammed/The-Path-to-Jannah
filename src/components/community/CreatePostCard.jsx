@@ -21,13 +21,10 @@ export default function CreatePostCard({
   const handleSubmit = () => {
     if (!content.trim()) return;
     onSubmit({
-      authorName: "You",
-      authorRole: "Community Member",
+      author_name: "You",
+      author_role: "Community Member",
       category,
       content: content.trim(),
-      timeAgo: "Just now",
-      likes: 0,
-      comments: [],
     });
     setContent("");
   };
