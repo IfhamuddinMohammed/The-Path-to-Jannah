@@ -10,6 +10,10 @@
       "type": "string",
       "description": "Article content in markdown format"
     },
+    "content_roman_urdu": {
+      "type": "string",
+      "description": "Article content in Roman Urdu (Latin-script Urdu), markdown format"
+    },
     "category": {
       "type": "string",
       "enum": [
