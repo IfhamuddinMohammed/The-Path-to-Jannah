@@ -116,7 +116,7 @@ export default function DiscussionPost({ post, onLikeChange }) {
 
         <p className="text-sm text-foreground/90 leading-relaxed">{post.content}</p>
 
-        <div className="flex items-center gap-1 pt-2 border-t border-border">
+        <div className="flex items-center gap-1 flex-wrap pt-2 border-t border-border">
           <Button variant="ghost" size="sm" onClick={toggleLike} className={cn(hasLiked && "text-primary")}>
             <ThumbsUp className={cn("w-4 h-4 mr-1.5", hasLiked && "fill-current")} />
             {likes}

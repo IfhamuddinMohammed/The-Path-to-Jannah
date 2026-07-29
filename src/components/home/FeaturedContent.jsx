@@ -76,7 +76,7 @@ export default function FeaturedContent({ articles, isLoading }) {
               )}
 
               <CardHeader>
-                <div className="flex gap-2 mb-2">
+                <div className="flex gap-2 mb-2 flex-wrap">
                   <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
                     {article.category}
                   </Badge>

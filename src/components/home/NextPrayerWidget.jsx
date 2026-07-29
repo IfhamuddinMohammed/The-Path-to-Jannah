@@ -109,14 +109,14 @@ export default function NextPrayerWidget() {
         <Clock className="w-9 h-9 text-primary-foreground/50 shrink-0" />
       </div>
 
-      <div className="grid grid-cols-5 divide-x divide-border">
+      <div className="flex divide-x divide-border overflow-x-auto">
         {prayerEntries.map(([name, time]) => {
           const Icon = getPrayerIcon(name);
           const isNext = nextPrayer?.name === name;
           return (
             <div
               key={name}
-              className={`flex flex-col items-center gap-1 py-3 text-center ${
+              className={`flex-1 min-w-[64px] flex flex-col items-center gap-1 py-3 text-center ${
                 isNext ? "bg-accent/10" : ""
               }`}
             >
@@ -132,7 +132,7 @@ export default function NextPrayerWidget() {
         })}
       </div>
 
-      <div className="p-4 border-t border-border flex items-center justify-between gap-3">
+      <div className="p-4 border-t border-border flex items-center justify-between gap-3 flex-wrap">
         {alertsOn ? (
           <p className="text-sm text-muted-foreground flex items-center gap-2">
             <BellRing className="w-4 h-4 text-accent" />

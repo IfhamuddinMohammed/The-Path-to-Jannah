@@ -72,7 +72,7 @@ export default function DuaCard({ dua, onAameenChange }) {
 
         <p className="text-sm text-foreground/90 leading-relaxed">{dua.request}</p>
 
-        <div className="flex items-center justify-between pt-2 border-t border-border">
+        <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-border">
           <Button
             variant={hasSaidAameen ? "default" : "outline"}
             size="sm"

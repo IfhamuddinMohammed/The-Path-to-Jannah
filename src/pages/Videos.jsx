@@ -72,9 +72,9 @@ export default function VideosPage() {
                 <CardHeader>
                   <CardTitle className="text-lg text-primary">{video.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1"><User className="w-3 h-3" /> {video.scholar || 'N/A'}</div>
-                  <div className="flex items-center gap-1"><Clock className="w-3 h-3" /> {video.duration || 'N/A'}</div>
+                <CardContent className="flex justify-between gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1 min-w-0"><User className="w-3 h-3 shrink-0" /> <span className="truncate">{video.scholar || 'N/A'}</span></div>
+                  <div className="flex items-center gap-1 shrink-0"><Clock className="w-3 h-3" /> {video.duration || 'N/A'}</div>
                 </CardContent>
               </Card>
             </a>
