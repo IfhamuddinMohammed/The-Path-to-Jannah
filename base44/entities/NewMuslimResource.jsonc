@@ -15,6 +15,18 @@
       "type": "string",
       "description": "Description or explanation"
     },
+    "description_roman_urdu": {
+      "type": "string",
+      "description": "Description, in Roman Urdu (Latin-script Urdu)"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full lesson content in markdown format (used for 'essentials' section items)"
+    },
+    "content_roman_urdu": {
+      "type": "string",
+      "description": "Full lesson content, in Roman Urdu (Latin-script Urdu), markdown format"
+    },
     "status": {
       "type": "string",
       "enum": ["essential", "important"],
