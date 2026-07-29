@@ -117,17 +117,19 @@ export default function HomePage() {
         </div>
 
         {/* Scroll cue */}
-        <button
-          type="button"
-          onClick={() =>
-            document.getElementById("home-content")?.scrollIntoView({ behavior: "smooth" })
-          }
-          aria-label="Scroll down to explore"
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 text-center text-[hsl(40_30%_92%)]/70 hover:text-accent transition-colors animate-bounce"
-        >
-          <span className="block text-xs mb-1">Explore</span>
-          <ChevronDown className="block w-5 h-5 mx-auto" />
-        </button>
+        <div className="absolute bottom-4 inset-x-0 flex justify-center pointer-events-none">
+          <button
+            type="button"
+            onClick={() =>
+              document.getElementById("home-content")?.scrollIntoView({ behavior: "smooth" })
+            }
+            aria-label="Scroll down to explore"
+            className="pointer-events-auto flex flex-col items-center gap-1 p-0 border-0 bg-transparent text-[hsl(40_30%_92%)]/70 hover:text-accent transition-colors animate-bounce"
+          >
+            <span className="text-xs leading-none">Explore</span>
+            <ChevronDown className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <div id="home-content" className="px-6 py-12">
