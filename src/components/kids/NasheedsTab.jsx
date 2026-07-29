@@ -4,12 +4,45 @@ import { Badge } from "@/components/ui/badge";
 import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function formatTime(seconds) {
+  if (!seconds || !Number.isFinite(seconds)) return "--:--";
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export default function NasheedsTab() {
   const [playingId, setPlayingId] = useState(null);
-  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  // The labels on each nasheed's data entry are just placeholder copy — the
+  // actual audio files are short generated tones, not real recordings of that
+  // length. Read each file's real duration instead of trusting a fabricated
+  // string, so whatever audio ends up here (placeholder or real) is always
+  // displayed accurately rather than potentially lying about play length.
+  const [durations, setDurations] = useState({});
   const audioRef = useRef(null);
 
   const playing = kidsNasheeds.find((n) => n.id === playingId) || null;
+  const playingDuration = playing ? durations[playing.id] : null;
+
+  useEffect(() => {
+    const probes = kidsNasheeds.map((nasheed) => {
+      const probe = new Audio();
+      probe.preload = "metadata";
+      probe.src = nasheed.audioSrc;
+      const handleLoaded = () => {
+        setDurations((prev) => ({ ...prev, [nasheed.id]: probe.duration }));
+      };
+      probe.addEventListener("loadedmetadata", handleLoaded);
+      return { probe, handleLoaded };
+    });
+    return () => {
+      probes.forEach(({ probe, handleLoaded }) => {
+        probe.removeEventListener("loadedmetadata", handleLoaded);
+        probe.src = "";
+      });
+    };
+  }, []);
 
   useEffect(() => {
     if (!playingId || !audioRef.current) return;
@@ -24,7 +57,7 @@ export default function NasheedsTab() {
     if (playingId === id) {
       audioRef.current?.pause();
       setPlayingId(null);
-      setProgress(0);
+      setCurrentTime(0);
     } else {
       audioRef.current?.pause();
       setPlayingId(id);
@@ -33,13 +66,15 @@ export default function NasheedsTab() {
 
   const handleTimeUpdate = () => {
     const audio = audioRef.current;
-    if (audio && audio.duration) setProgress(audio.currentTime / audio.duration);
+    if (audio) setCurrentTime(audio.currentTime);
   };
 
   const handleEnded = () => {
     setPlayingId(null);
-    setProgress(0);
+    setCurrentTime(0);
   };
+
+  const progressFraction = playingDuration ? Math.min(1, currentTime / playingDuration) : 0;
 
   return (
     <div className="pb-20">
@@ -72,7 +107,9 @@ export default function NasheedsTab() {
                   >
                     {nasheed.category}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">{nasheed.duration}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatTime(durations[nasheed.id])}
+                  </span>
                 </div>
               </div>
               <button
@@ -104,11 +141,16 @@ export default function NasheedsTab() {
               {playing.emoji}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-primary truncate">{playing.title}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-primary truncate">{playing.title}</p>
+                <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
+                  {formatTime(currentTime)} / {formatTime(playingDuration)}
+                </span>
+              </div>
               <div className="h-1.5 bg-border rounded-full mt-1.5 overflow-hidden">
                 <div
                   className="h-full bg-accent transition-[width] duration-150"
-                  style={{ width: `${progress * 100}%` }}
+                  style={{ width: `${progressFraction * 100}%` }}
                 />
               </div>
             </div>

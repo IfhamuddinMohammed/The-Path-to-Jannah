@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -8,25 +8,63 @@ import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 export default function StoryDialog({ story, open, onOpenChange }) {
   const [page, setPage] = useState(0);
   const { speak, stop, speaking, progress: speechProgress } = useSpeechSynthesis();
+  // Tracks whether we're in "hands-free narration" mode, where finishing a
+  // page's audio should automatically turn to the next page and keep reading —
+  // a plain ref (not state) so the speechSynthesis onEnd callback always reads
+  // the latest value instead of a stale one captured at speak()-call time.
+  const autoNarrateRef = useRef(false);
 
   useEffect(() => {
-    if (open) setPage(0);
-    else stop();
+    if (open) {
+      setPage(0);
+    } else {
+      autoNarrateRef.current = false;
+      stop();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, story]);
-
-  useEffect(() => {
-    stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
 
   if (!story) return null;
 
   const isLastPage = page === story.pages.length - 1;
 
+  const narratePage = (pageIndex) => {
+    speak(story.pages[pageIndex], {
+      onEnd: () => {
+        if (!autoNarrateRef.current) return;
+        if (pageIndex < story.pages.length - 1) {
+          const next = pageIndex + 1;
+          setPage(next);
+          narratePage(next);
+        } else if (story.moral) {
+          speak(story.moral, { onEnd: () => (autoNarrateRef.current = false) });
+        } else {
+          autoNarrateRef.current = false;
+        }
+      },
+    });
+  };
+
   const toggleListen = () => {
-    if (speaking) stop();
-    else speak(story.pages[page]);
+    if (speaking) {
+      autoNarrateRef.current = false;
+      stop();
+    } else {
+      autoNarrateRef.current = true;
+      narratePage(page);
+    }
+  };
+
+  const goBack = () => {
+    autoNarrateRef.current = false;
+    stop();
+    setPage((p) => Math.max(0, p - 1));
+  };
+
+  const goNext = () => {
+    autoNarrateRef.current = false;
+    stop();
+    setPage((p) => Math.min(story.pages.length - 1, p + 1));
   };
 
   return (
@@ -65,6 +103,9 @@ export default function StoryDialog({ story, open, onOpenChange }) {
               />
             </div>
           )}
+          {speaking && !isLastPage && (
+            <p className="text-xs text-muted-foreground">Turning the page automatically…</p>
+          )}
         </div>
 
         {isLastPage && (
@@ -79,7 +120,7 @@ export default function StoryDialog({ story, open, onOpenChange }) {
             variant="outline"
             size="sm"
             className="rounded-full"
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            onClick={goBack}
             disabled={page === 0}
           >
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
@@ -92,7 +133,7 @@ export default function StoryDialog({ story, open, onOpenChange }) {
               Finish
             </Button>
           ) : (
-            <Button size="sm" className="rounded-full" onClick={() => setPage((p) => p + 1)}>
+            <Button size="sm" className="rounded-full" onClick={goNext}>
               Next <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           )}

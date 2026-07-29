@@ -58,7 +58,7 @@ export function useSpeechSynthesis() {
   }, [supported]);
 
   const speak = useCallback(
-    async (text, { lang = "en-US", rate = 0.92 } = {}) => {
+    async (text, { lang = "en-US", rate = 0.92, onEnd } = {}) => {
       if (!supported || !text) return;
       window.speechSynthesis.cancel();
 
@@ -82,6 +82,7 @@ export function useSpeechSynthesis() {
       utterance.onend = () => {
         setSpeaking(false);
         setProgress(1);
+        onEnd?.();
       };
       utterance.onerror = () => setSpeaking(false);
 
