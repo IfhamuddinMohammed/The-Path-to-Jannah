@@ -100,17 +100,17 @@ export const AuthProvider = ({ children }) => {
       setAuthChecked(true);
     } catch (error) {
       console.error('User auth check failed:', error);
+
+      // This app allows anonymous access (requiresAuth: false, no login page exists),
+      // so a stale/invalid token should just fall back to an anonymous session rather
+      // than forcing a login redirect. Clear it so future loads stop re-attempting auth.
+      if (error.status === 401 || error.status === 403) {
+        base44.auth.logout();
+      }
+
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       setAuthChecked(true);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
     }
   };
 
