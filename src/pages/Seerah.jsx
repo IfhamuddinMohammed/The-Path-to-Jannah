@@ -1,15 +1,32 @@
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { SeerahEvent, SeerahLocation, ProphetName, CharacterTrait } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, Calendar, MapPin, BookOpen, Search, Landmark, Building2, Mountain, TreePine, Swords } from "lucide-react";
+import {
+  Heart,
+  Calendar,
+  MapPin,
+  BookOpen,
+  Search,
+  Landmark,
+  Building2,
+  Mountain,
+  TreePine,
+  Swords,
+  Languages,
+  Headphones,
+  Youtube,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventCard from "@/components/seerah/EventCard";
 import EventDetailDialog from "@/components/seerah/EventDetailDialog";
 import ProphetNameChip from "@/components/seerah/ProphetNameChip";
 import CharacterTraitCard from "@/components/seerah/CharacterTraitCard";
+import { cn } from "@/lib/utils";
 
 const LOCATION_ICONS = {
   "Makkah Al-Mukarramah": Landmark,
@@ -19,8 +36,38 @@ const LOCATION_ICONS = {
   Badr: Swords,
 };
 
+// Established scholars' Seerah lecture series, embedded via link-out (not
+// iframe) to their own YouTube channels — same pattern as the Videos page.
+const LECTURE_SERIES = [
+  {
+    title: "Seerah of Prophet Muhammad ﷺ",
+    speaker: "Shaykh Dr. Yasir Qadhi",
+    language: "English",
+    description:
+      "A detailed, source-referenced account of the Prophet's ﷺ life — one of the most comprehensive English-language Seerah series available, spanning over 100 sessions.",
+    url: "https://www.youtube.com/playlist?list=PL07tC5WUlx10tDkMpqQWXCPn_7G0XhG5n",
+  },
+  {
+    title: "Life of the Final Messenger",
+    speaker: "Mufti Ismail Menk",
+    language: "English",
+    description:
+      "An accessible, engaging journey through the Seerah across 28 lectures — well suited for beginners and families alike.",
+    url: "https://www.youtube.com/playlist?list=PLWV9AumpGdP9zadagjK0qHE3y_UWPfG77",
+  },
+  {
+    title: "Seerat-un-Nabi ﷺ",
+    speaker: "Seerah in Urdu",
+    language: "Urdu",
+    description:
+      "A compiled Urdu-language lecture series covering the life of the Prophet ﷺ, from birth to his final days.",
+    url: "https://www.youtube.com/playlist?list=PLSeJQpJmPdNjRMHcAixwxVQp79kjvGpAK",
+  },
+];
+
 export default function SeerahPage() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [contentLanguage, setContentLanguage] = useState("english");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -52,6 +99,8 @@ export default function SeerahPage() {
     load();
   }, []);
 
+  const isRomanUrdu = contentLanguage === "roman_urdu";
+
   const displayEvents = useMemo(
     () =>
       events.map((e) => ({
@@ -61,12 +110,13 @@ export default function SeerahPage() {
         title: e.title,
         titleArabic: e.title_arabic,
         era: e.era,
-        description: e.description,
-        detailedText: e.detailed_text,
-        keyLessons: e.key_lessons || [],
+        description: (isRomanUrdu && e.description_roman_urdu) || e.description,
+        detailedText: (isRomanUrdu && e.detailed_text_roman_urdu) || e.detailed_text,
+        keyLessons:
+          (isRomanUrdu && e.key_lessons_roman_urdu?.length ? e.key_lessons_roman_urdu : e.key_lessons) || [],
         authenticSources: e.authentic_sources || [],
       })),
-    [events]
+    [events, isRomanUrdu]
   );
 
   const displayLocations = useMemo(
@@ -74,10 +124,10 @@ export default function SeerahPage() {
       locations.map((l) => ({
         name: l.name,
         arabicName: l.arabic_name,
-        significance: l.significance,
+        significance: (isRomanUrdu && l.significance_roman_urdu) || l.significance,
         eventsCount: l.events_count,
       })),
-    [locations]
+    [locations, isRomanUrdu]
   );
 
   const displayNames = useMemo(
@@ -85,10 +135,10 @@ export default function SeerahPage() {
       names.map((n) => ({
         arabic: n.arabic,
         transliteration: n.transliteration,
-        meaning: n.meaning,
+        meaning: (isRomanUrdu && n.meaning_roman_urdu) || n.meaning,
         reference: n.reference,
       })),
-    [names]
+    [names, isRomanUrdu]
   );
 
   const displayTraits = useMemo(
@@ -96,10 +146,10 @@ export default function SeerahPage() {
       traits.map((t) => ({
         trait: t.trait,
         arabicTrait: t.arabic_trait,
-        description: t.description,
+        description: (isRomanUrdu && t.description_roman_urdu) || t.description,
         hadithCitation: t.hadith_citation,
       })),
-    [traits]
+    [traits, isRomanUrdu]
   );
 
   const filteredEvents = useMemo(() => {
@@ -139,22 +189,51 @@ export default function SeerahPage() {
           </p>
         </div>
 
-        <div className="relative max-w-xl mx-auto mb-8">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Search events by title or keyword..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl mx-auto mb-8">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Search events by title or keyword..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="inline-flex p-1 rounded-full bg-muted border border-border shrink-0">
+            <button
+              type="button"
+              onClick={() => setContentLanguage("english")}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5",
+                contentLanguage === "english"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Languages className="w-3.5 h-3.5" /> English
+            </button>
+            <button
+              type="button"
+              onClick={() => setContentLanguage("roman_urdu")}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                contentLanguage === "roman_urdu"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Roman Urdu
+            </button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto">
             <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
             <TabsTrigger value="early" className="text-xs sm:text-sm py-2">Early Life</TabsTrigger>
             <TabsTrigger value="prophethood" className="text-xs sm:text-sm py-2">Prophethood</TabsTrigger>
             <TabsTrigger value="character" className="text-xs sm:text-sm py-2">Character</TabsTrigger>
+            <TabsTrigger value="lectures" className="text-xs sm:text-sm py-2">Lectures</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -200,6 +279,37 @@ export default function SeerahPage() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="lectures">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {LECTURE_SERIES.map((series) => (
+                <a
+                  key={series.url}
+                  href={series.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block p-5 rounded-xl bg-card border border-border hover:border-accent/40 hover:glow-gold transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                      <Headphones className="w-4 h-4 text-accent" />
+                    </div>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border border-border">
+                      {series.language}
+                    </span>
+                  </div>
+                  <h4 className="font-display font-semibold text-primary mb-1">{series.title}</h4>
+                  <p className="text-sm text-accent mb-2">{series.speaker}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    {series.description}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:text-accent transition-colors">
+                    <Youtube className="w-4 h-4" /> Watch on YouTube
+                  </span>
+                </a>
+              ))}
+            </div>
+          </TabsContent>
         </Tabs>
 
         <Card className="bg-primary/10 border-primary/20">
@@ -212,8 +322,10 @@ export default function SeerahPage() {
               Explore more about the Prophet's life, his companions, and his teachings
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3">
-              <Button variant="outline">Read Hadith Collection</Button>
-              <Button>Watch Seerah Videos</Button>
+              <Link to={createPageUrl("Hadith")}>
+                <Button variant="outline">Read Hadith Collection</Button>
+              </Link>
+              <Button onClick={() => setActiveTab("lectures")}>Watch Seerah Videos</Button>
             </div>
           </CardContent>
         </Card>

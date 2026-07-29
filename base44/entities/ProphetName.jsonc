@@ -14,6 +14,10 @@
       "type": "string",
       "description": "The meaning of the name"
     },
+    "meaning_roman_urdu": {
+      "type": "string",
+      "description": "The meaning of the name, in Roman Urdu (Latin-script Urdu)"
+    },
     "reference": {
       "type": "string",
       "description": "Qur'an or Hadith reference for this name"

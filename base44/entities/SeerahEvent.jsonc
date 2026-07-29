@@ -27,14 +27,27 @@
       "type": "string",
       "description": "Short summary of the event"
     },
+    "description_roman_urdu": {
+      "type": "string",
+      "description": "Short summary of the event, in Roman Urdu (Latin-script Urdu)"
+    },
     "detailed_text": {
       "type": "string",
       "description": "Full detailed account of the event"
+    },
+    "detailed_text_roman_urdu": {
+      "type": "string",
+      "description": "Full detailed account of the event, in Roman Urdu (Latin-script Urdu)"
     },
     "key_lessons": {
       "type": "array",
       "items": { "type": "string" },
       "description": "Key lessons drawn from this event"
+    },
+    "key_lessons_roman_urdu": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key lessons drawn from this event, in Roman Urdu (Latin-script Urdu)"
     },
     "authentic_sources": {
       "type": "array",
