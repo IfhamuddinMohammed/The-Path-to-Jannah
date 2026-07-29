@@ -83,7 +83,7 @@ export default function HomePage() {
 
               <p
                 dir="rtl"
-                className="arabic-font text-4xl md:text-6xl text-accent leading-loose"
+                className="arabic-font text-3xl md:text-5xl text-accent leading-loose pt-5 pb-3 md:pt-7 md:pb-4"
                 style={{ textShadow: "0 2px 24px hsl(215 48% 4% / 0.6)" }}
               >
                 بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
