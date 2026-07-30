@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Languages,
+  X,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,6 +37,9 @@ import { surahs as quranSurahs } from "@/data/quranData";
 import { useQuranVerses } from "@/hooks/useQuranVerses";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import VerseCard from "@/components/quran/VerseCard";
+import PageView from "@/components/quran/PageView";
+import { getPageAt } from "@/lib/mushaf";
+import { getLastRead, clearLastRead } from "@/lib/quranProgress";
 import { useQuranDownloads } from "@/hooks/useQuranDownloads";
 import { useRomanUrdu } from "@/hooks/useRomanUrdu";
 import { useQuranAudio } from "@/hooks/useQuranAudio";
@@ -59,71 +63,6 @@ function getRecommendedSurahs(excludeIds, count = 3) {
     .filter(Boolean);
 }
 
-const ARABIC_INDIC_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-function toArabicNumeral(num) {
-  return String(num)
-    .split("")
-    .map((d) => ARABIC_INDIC_DIGITS[Number(d)] ?? d)
-    .join("");
-}
-
-// Continuous, traditional Mushaf-style page — flowing justified Arabic text
-// with a decorative ayah-end marker between verses, no per-verse cards/translations.
-function ContinuousMushafView({ verses, loading, error, retry }) {
-  if (loading) {
-    return (
-      <div className="mt-6 p-6 md:p-10 rounded-xl bg-card border border-border space-y-3">
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-6 w-5/6" />
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-6 w-2/3" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <AlertCircle className="w-16 h-16 mx-auto text-destructive mb-4" />
-        <p className="text-foreground font-medium mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={retry}>
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
-  if (!verses || verses.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">No verses to display.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-6 p-6 md:p-10 rounded-xl bg-card border border-border relative overflow-hidden">
-      <div className="absolute inset-0 geometric-bg opacity-20 pointer-events-none"></div>
-      <p
-        dir="rtl"
-        className="relative arabic-font text-2xl md:text-3xl leading-loose text-primary text-justify"
-      >
-        {verses.map((verse) => (
-          <span key={verse.numberInSurah}>
-            {verse.arabic}
-            <span className="text-accent mx-1" aria-hidden="true">
-              {" "}
-              ۝{toArabicNumeral(verse.numberInSurah)}{" "}
-            </span>
-          </span>
-        ))}
-      </p>
-    </div>
-  );
-}
-
 export default function QuranPage() {
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -131,6 +70,8 @@ export default function QuranPage() {
   const [audioLanguage, setAudioLanguage] = useState("arabic");
   const [activeTab, setActiveTab] = useState("translation");
   const [readingMode, setReadingMode] = useState("verse");
+  const [resumeTarget, setResumeTarget] = useState(null);
+  const [lastRead, setLastRead] = useState(() => getLastRead());
   const { nowPlaying, toggleVerse: toggleAudioVerse, pause: pauseAudio, resume: resumeAudio } =
     useQuranAudio();
 
@@ -170,6 +111,35 @@ export default function QuranPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [selectedSurah?.id]);
+
+  // Keep the active surah visible within the sidebar's own scroll box — selecting via the
+  // prev/next-surah buttons (rather than clicking the list directly) would otherwise leave
+  // the highlighted item scrolled out of view inside that small internal scroll area.
+  const activeSurahItemRef = useRef(null);
+  useEffect(() => {
+    activeSurahItemRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [selectedSurah?.id]);
+
+  // Picking a surah normally (list, prev/next, recommended) always starts fresh at its first
+  // ayah — only the explicit "Continue Reading" action should resume mid-surah.
+  const openSurah = (surah) => {
+    setSelectedSurah(surah);
+    setResumeTarget(null);
+  };
+
+  const handleContinueReading = () => {
+    if (!lastRead) return;
+    const surah = quranSurahs.find((s) => s.id === lastRead.surahId);
+    if (!surah) return;
+    setSelectedSurah(surah);
+    setReadingMode("page");
+    setResumeTarget({ pageNumber: lastRead.pageNumber, verseKey: `${lastRead.surahId}:${lastRead.ayah}` });
+  };
+
+  const handleDismissLastRead = () => {
+    clearLastRead();
+    setLastRead(null);
+  };
 
   const surahMeta = selectedSurah
     ? { id: selectedSurah.id, name: selectedSurah.name, arabic: selectedSurah.arabic }
@@ -391,6 +361,46 @@ export default function QuranPage() {
           </p>
         </div>
 
+        {/* Continue Reading — only shown when browsing the surah list, not while already reading */}
+        {!selectedSurah && lastRead && (
+          <Card className="mb-8 bg-card border-border glow-shadow">
+            <CardContent className="p-4 md:p-6 flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={handleContinueReading}
+                className="flex items-center gap-4 min-w-0 text-left flex-1"
+              >
+                <div className="w-11 h-11 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-5 h-5 text-accent" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Continue Reading</p>
+                  <p className="font-display font-medium text-primary truncate">
+                    {lastRead.surahName}{" "}
+                    <span className="arabic-font text-accent">{lastRead.surahArabic}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Ayah {lastRead.ayah} · Page {lastRead.pageNumber} of 604
+                  </p>
+                </div>
+              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button size="sm" onClick={handleContinueReading}>
+                  Continue
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDismissLastRead}
+                  aria-label="Dismiss continue reading"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Search and Filters */}
         <Card className="mb-8 bg-card border-border glow-shadow">
           <CardContent className="p-4 md:p-6">
@@ -449,7 +459,7 @@ export default function QuranPage() {
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Surahs List — hidden on mobile once a surah is selected, so the reader takes over the screen */}
-          <div className={`lg:col-span-1 ${selectedSurah ? "hidden lg:block" : ""}`}>
+          <div className={`lg:col-span-1 lg:self-start ${selectedSurah ? "hidden lg:block" : ""}`}>
             <Card className="lg:sticky lg:top-20 bg-card border-border glow-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-display text-primary">
@@ -457,7 +467,7 @@ export default function QuranPage() {
                   Surahs (Chapters)
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0 lg:max-h-96 lg:overflow-y-auto">
+              <CardContent className="p-0 max-h-96 overflow-y-auto">
                 {quranSurahs
                   .filter(
                     (surah) =>
@@ -473,12 +483,13 @@ export default function QuranPage() {
                   .map((surah) => (
                     <div
                       key={surah.id}
+                      ref={selectedSurah?.id === surah.id ? activeSurahItemRef : null}
                       className={`p-4 border-b border-border cursor-pointer transition-colors ${
                         selectedSurah?.id === surah.id
                           ? "bg-accent/10 border-l-4 border-l-accent"
                           : "hover:bg-accent/5"
                       }`}
-                      onClick={() => setSelectedSurah(surah)}
+                      onClick={() => openSurah(surah)}
                     >
                       <div className="flex justify-between items-start">
                         <div>
@@ -525,7 +536,7 @@ export default function QuranPage() {
                   variant="ghost"
                   size="sm"
                   className="lg:hidden mb-4 -ml-2"
-                  onClick={() => setSelectedSurah(null)}
+                  onClick={() => openSurah(null)}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back to Surahs
                 </Button>
@@ -676,7 +687,7 @@ export default function QuranPage() {
                     </div>
                   </div>
 
-                  {readingMode === "verse" ? (
+                  {readingMode === "verse" && (
                     <Tabs
                       value={activeTab}
                       onValueChange={setActiveTab}
@@ -736,12 +747,20 @@ export default function QuranPage() {
                         )}
                       </TabsContent>
                     </Tabs>
-                  ) : (
-                    <ContinuousMushafView
-                      verses={verses}
-                      loading={loading}
-                      error={error}
-                      retry={retry}
+                  )}
+
+                  {readingMode === "page" && (
+                    <PageView
+                      initialPageNumber={resumeTarget?.pageNumber ?? getPageAt(selectedSurah.id, 1)}
+                      initialVerseKey={resumeTarget?.verseKey}
+                      totalPages={604}
+                      onExit={() => {
+                        setReadingMode("verse");
+                        setResumeTarget(null);
+                        setLastRead(getLastRead());
+                      }}
+                      reciter={selectedReciter}
+                      audioLanguage={audioLanguage}
                     />
                   )}
 
@@ -750,7 +769,7 @@ export default function QuranPage() {
                     <div className="flex justify-center mb-6 lg:hidden">
                       <button
                         type="button"
-                        onClick={() => setSelectedSurah(null)}
+                        onClick={() => openSurah(null)}
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors"
                       >
                         <ArrowLeft className="w-4 h-4" /> Back to Surah List
@@ -761,7 +780,7 @@ export default function QuranPage() {
                       {prevSurah ? (
                         <button
                           type="button"
-                          onClick={() => setSelectedSurah(prevSurah)}
+                          onClick={() => openSurah(prevSurah)}
                           className="group flex-1 flex items-center gap-3 p-4 rounded-xl border border-border hover:border-accent/40 hover:bg-accent/5 transition-colors text-left min-w-0"
                         >
                           <ArrowLeft className="w-5 h-5 text-accent shrink-0 group-hover:-translate-x-0.5 transition-transform" />
@@ -779,7 +798,7 @@ export default function QuranPage() {
                       {nextSurah ? (
                         <button
                           type="button"
-                          onClick={() => setSelectedSurah(nextSurah)}
+                          onClick={() => openSurah(nextSurah)}
                           className="group flex-1 flex items-center justify-end gap-3 p-4 rounded-xl border border-border hover:border-accent/40 hover:bg-accent/5 transition-colors text-right min-w-0"
                         >
                           <div className="min-w-0">
@@ -805,7 +824,7 @@ export default function QuranPage() {
                             <button
                               key={surah.id}
                               type="button"
-                              onClick={() => setSelectedSurah(surah)}
+                              onClick={() => openSurah(surah)}
                               className="group p-4 rounded-xl border border-border bg-card hover:border-accent/40 hover:glow-gold transition-all duration-300 text-left"
                             >
                               <div className="flex items-center justify-between mb-1">

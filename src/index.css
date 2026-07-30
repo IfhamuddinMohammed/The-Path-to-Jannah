@@ -267,3 +267,9 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+/* Mosque Finder: gold callout arrow for the highlighted on-map label (Leaflet renders the
+   tooltip's arrow as a ::before pseudo-element, which Tailwind's className prop can't reach). */
+.mosque-tooltip-active.leaflet-tooltip-bottom::before {
+  border-bottom-color: #d4af37 !important;
+}

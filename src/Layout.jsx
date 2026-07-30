@@ -15,6 +15,7 @@ import {
   BookUser,
   Clock,
   Compass,
+  MapPin,
   Star,
   Brain,
   Baby,
@@ -25,6 +26,7 @@ import {
   CircleDashed,
   X,
   HeartHandshake,
+  GraduationCap,
 } from "lucide-react";
 import {
   Sidebar,
@@ -55,7 +57,9 @@ const navigationItems = [
   { title: "Stories", url: createPageUrl("Stories"), icon: BookUser, group: "main" },
   { title: "Guidance", url: createPageUrl("Guidance"), icon: Sun, group: "main" },
   { title: "Prayer Times", url: createPageUrl("PrayerTimes"), icon: Clock, group: "worship" },
+  { title: "Prayer Academy", url: createPageUrl("PrayerAcademy"), icon: GraduationCap, group: "worship" },
   { title: "Qibla", url: createPageUrl("Qibla"), icon: Compass, group: "worship" },
+  { title: "Mosque Finder", url: createPageUrl("MosqueFinder"), icon: MapPin, group: "worship" },
   { title: "99 Names", url: createPageUrl("Names"), icon: Star, group: "worship" },
   { title: "Tasbeeh", url: createPageUrl("Tasbeeh"), icon: CircleDashed, group: "worship" },
   { title: "Seerah", url: createPageUrl("Seerah"), icon: Heart, group: "learning" },

@@ -1,0 +1,55 @@
+{
+  "name": "WuduStep",
+  "type": "object",
+  "properties": {
+    "order": {
+      "type": "number",
+      "description": "Step sequence, 1..N — drives the interactive tutorial's stepper"
+    },
+    "title": {
+      "type": "string",
+      "description": "e.g. 'Niyyah (Intention)', 'Washing the Face'"
+    },
+    "arabic_text": {
+      "type": "string",
+      "description": "Optional accompanying dua/dhikr for this step, in Arabic"
+    },
+    "transliteration": {
+      "type": "string",
+      "description": "Roman English transliteration of the dua/dhikr"
+    },
+    "translation": {
+      "type": "string",
+      "description": "English translation of the dua/dhikr"
+    },
+    "instructions": {
+      "type": "string",
+      "description": "How to physically perform the step, markdown"
+    },
+    "instructions_roman_urdu": {
+      "type": "string",
+      "description": "How to physically perform the step, Roman Urdu, markdown"
+    },
+    "importance": {
+      "type": "string",
+      "description": "Why this step matters / its ruling status (Fard vs Sunnah)"
+    },
+    "common_mistakes": {
+      "type": "string",
+      "description": "Frequent errors to avoid, markdown"
+    },
+    "madhab_notes": {
+      "type": "string",
+      "description": "Optional madhab-specific variation for this step, presented neutrally"
+    },
+    "hadith_reference": {
+      "type": "string",
+      "description": "Qur'an/Hadith citation, e.g. 'Sahih Muslim 226' — left empty rather than an invented reference when not confidently known"
+    },
+    "audio_url": {
+      "type": "string",
+      "description": "Optional recitation clip for this step's dua/dhikr (reserved for future use)"
+    }
+  },
+  "required": ["order", "title", "instructions"]
+}

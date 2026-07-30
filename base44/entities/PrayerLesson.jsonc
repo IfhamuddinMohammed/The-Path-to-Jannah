@@ -1,0 +1,57 @@
+{
+  "name": "PrayerLesson",
+  "type": "object",
+  "properties": {
+    "section": {
+      "type": "string",
+      "enum": [
+        "why_we_pray",
+        "importance",
+        "conditions",
+        "who_must_pray",
+        "purity",
+        "wudu_overview",
+        "tayammum",
+        "awrah",
+        "facing_qibla",
+        "prayer_times",
+        "adhan",
+        "iqamah"
+      ],
+      "description": "Which Learn Salah topic group this lesson belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Lesson title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short teaser shown on the hub card"
+    },
+    "description_roman_urdu": {
+      "type": "string",
+      "description": "Short teaser, in Roman Urdu (Latin-script Urdu)"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full lesson body, markdown"
+    },
+    "content_roman_urdu": {
+      "type": "string",
+      "description": "Full lesson body, Roman Urdu, markdown"
+    },
+    "madhab_notes": {
+      "type": "string",
+      "description": "Optional markdown callout of Hanafi/Shafi'i/Maliki/Hanbali differences, presented neutrally where valid scholarly differences exist"
+    },
+    "hadith_reference": {
+      "type": "string",
+      "description": "Qur'an/Hadith citation supporting this lesson, e.g. 'Sahih al-Bukhari 528' — left empty rather than an invented reference when not confidently known"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order within its section"
+    }
+  },
+  "required": ["section", "title", "description", "content"]
+}

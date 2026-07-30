@@ -28,9 +28,12 @@ import NewMuslims from './pages/NewMuslims';
 import Fiqh from './pages/Fiqh';
 import Huqooq from './pages/Huqooq';
 import About from './pages/About';
+import MosqueFinder from './pages/MosqueFinder';
+import PrayerAcademy from './pages/PrayerAcademy';
 import { AdhaanProvider } from '@/hooks/useAdhaan';
 import AdhaanBanner from '@/components/adhaan/AdhaanBanner';
 import { QuranAudioProvider } from '@/hooks/useQuranAudio';
+import { PrayerPreferencesProvider } from '@/hooks/usePrayerPreferences';
 import { useHardwareBackButton } from '@/hooks/useHardwareBackButton';
 // Add page imports here
 
@@ -82,6 +85,8 @@ const AuthenticatedApp = () => {
         <Route path="/Fiqh" element={<Fiqh />} />
         <Route path="/Huqooq" element={<Huqooq />} />
         <Route path="/About" element={<About />} />
+        <Route path="/MosqueFinder" element={<MosqueFinder />} />
+        <Route path="/PrayerAcademy" element={<PrayerAcademy />} />
         {/* Add your page Route elements here */}
       </Route>
       <Route path="*" element={<PageNotFound />} />
@@ -99,10 +104,12 @@ function App() {
         <QueryClientProvider client={queryClientInstance}>
           <AdhaanProvider>
             <QuranAudioProvider>
-              <Router>
-                <ScrollToTop />
-                <AuthenticatedApp />
-              </Router>
+              <PrayerPreferencesProvider>
+                <Router>
+                  <ScrollToTop />
+                  <AuthenticatedApp />
+                </Router>
+              </PrayerPreferencesProvider>
             </QuranAudioProvider>
             <AdhaanBanner />
           </AdhaanProvider>

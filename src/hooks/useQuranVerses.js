@@ -4,12 +4,25 @@ import { getVoiceAudioUrl, getVoiceKey } from "@/lib/quranAudio";
 
 function stripBismillah(text, surahNumber, isFirstAyah) {
   if (!isFirstAyah || surahNumber === 1 || surahNumber === 9) return text;
-  if (text.startsWith("بِسْمِ")) {
-    const marker = "الرَّحِيمِ";
-    const idx = text.indexOf(marker);
-    if (idx !== -1) {
-      const stripped = text.substring(idx + marker.length).trim();
-      return stripped || text;
+  // NFC-normalize before comparing: different Arabic text sources order stacked combining
+  // marks (e.g. shadda before fatha vs. fatha before shadda on the same letter) differently —
+  // they render identically but compare unequal as raw code points, which silently broke this
+  // match before and left the Bismillah duplicated ahead of every surah's real first ayah.
+  const normalized = text.normalize("NFC");
+  // At-Tin (95) and Al-Qadr (97) carry an extra shadda on the very first letter — a documented
+  // Hafs recitation mark reflecting the connection to the previous surah (94->95, 96->97) —
+  // so the plain form alone doesn't match those two.
+  const bismillahStarts = ["بِسْمِ", "بِّسْمِ"].map((s) => s.normalize("NFC"));
+  if (bismillahStarts.some((s) => normalized.startsWith(s))) {
+    // Also try both Alef forms (Alef Wasla ٱ vs plain Alef ا) — normalization doesn't unify
+    // those, since they're genuinely different base letters, not just combining-mark order.
+    const markers = ["ٱلرَّحِيمِ", "الرَّحِيمِ"].map((m) => m.normalize("NFC"));
+    for (const marker of markers) {
+      const idx = normalized.indexOf(marker);
+      if (idx !== -1) {
+        const stripped = normalized.substring(idx + marker.length).trim();
+        return stripped || text;
+      }
     }
   }
   return text;

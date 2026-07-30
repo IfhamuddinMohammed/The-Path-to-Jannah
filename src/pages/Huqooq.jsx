@@ -102,8 +102,11 @@ function HuqooqCard({ entry }) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="font-display text-lg text-primary">{entry.theme}</CardTitle>
-          <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 shrink-0">
-            <BookMarked className="w-3 h-3 mr-1" />
+          <Badge
+            variant="outline"
+            className="bg-accent/10 text-accent border-accent/20 min-w-0 max-w-full whitespace-normal text-left"
+          >
+            <BookMarked className="w-3 h-3 mr-1 shrink-0" />
             {entry.reference}
           </Badge>
         </div>
