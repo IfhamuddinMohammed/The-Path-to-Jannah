@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -44,11 +44,38 @@ import { useHardwareBackButton } from '@/hooks/useHardwareBackButton';
 import SplashScreen from '@/components/SplashScreen';
 // Add page imports here
 
+// Minimum time the branded splash stays up, regardless of how fast the app-state check
+// resolves. Without this, on a warm connection it can resolve in well under a second — too
+// quick for anyone to actually read the wordmark/tagline it exists to show.
+const MIN_SPLASH_DURATION_MS = 2000;
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const [splashReady, setSplashReady] = useState(false);
 
-  // Shown while checking app public settings or auth — briefly, right after the native splash
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  useEffect(() => {
+    let cancelled = false;
+    // Hold the splash until BOTH the minimum duration has passed AND the Home page's own
+    // chunk has actually finished downloading — not just a fixed timer. A fixed timer alone
+    // only guarantees people can read the wordmark; it says nothing about whether Home is
+    // ready right after, so on a slow connection this splash was immediately followed by a
+    // second, plainer loading screen (the <Suspense> fallback below, still waiting on
+    // Home.jsx) — two disconnected screens back to back instead of one continuous one.
+    // Waiting on the chunk itself means that fallback has (almost) nothing left to wait for
+    // by the time this splash goes away, regardless of connection speed.
+    Promise.all([
+      new Promise((resolve) => setTimeout(resolve, MIN_SPLASH_DURATION_MS)),
+      import('./pages/Home'),
+    ]).then(() => {
+      if (!cancelled) setSplashReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Shown while checking app public settings/auth, and until splashReady above
+  if (isLoadingPublicSettings || isLoadingAuth || !splashReady) {
     return <SplashScreen />;
   }
 
@@ -63,15 +90,14 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // Render the main app
+  // Render the main app. Home's chunk is prefetched above during the splash's minimum-
+  // duration window, so this fallback rarely shows on first launch — but React.lazy still
+  // takes one extra render tick to flip from pending to resolved even with an already-cached
+  // module, so a brief flash here is essentially unavoidable. Reusing SplashScreen itself
+  // (not a smaller/differently-styled spinner) means there's no visible change at all across
+  // that flash — it just reads as one continuous screen the whole time until Home mounts.
   return (
-    <Suspense
-      fallback={
-        <div className="fixed inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-        </div>
-      }
-    >
+    <Suspense fallback={<SplashScreen />}>
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
