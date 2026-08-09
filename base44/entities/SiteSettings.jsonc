@@ -1,0 +1,31 @@
+{
+  "name": "SiteSettings",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Fixed identifier for the single settings row ('site') — this entity is a singleton; the app only ever reads the first row."
+    },
+    "feedback_email": {
+      "type": "string",
+      "description": "Email address the About page's 'Send Feedback' link opens a mailto: to"
+    },
+    "instagram_url": {
+      "type": "string",
+      "description": "Official Instagram profile URL, shown as an icon link in the sidebar footer. Leave empty to hide the icon."
+    },
+    "whatsapp_number": {
+      "type": "string",
+      "description": "WhatsApp contact number in international format including the country code (e.g. '+918686850232'), used to build a wa.me click-to-chat link in the sidebar footer. Leave empty to hide the icon."
+    },
+    "broadcast_channel_label": {
+      "type": "string",
+      "description": "Display label/tooltip for the broadcast channel link, e.g. 'WhatsApp Channel' or 'Telegram Channel'"
+    },
+    "broadcast_channel_url": {
+      "type": "string",
+      "description": "URL of the official broadcast/announcement channel, shown as an icon link in the sidebar footer. Leave empty to hide the icon."
+    }
+  },
+  "required": ["key"]
+}

@@ -1,0 +1,57 @@
+name: Build iOS App
+
+# Manual trigger only (not on every push like build-android.yml) — macOS GitHub-hosted runners
+# bill at a much higher per-minute rate than Linux ones for private repos, so this shouldn't run
+# unattended until that trade-off has been decided. Run it from the Actions tab when you want to
+# verify the iOS project still builds.
+#
+# This produces an UNSIGNED simulator build only, proving the Capacitor iOS project compiles —
+# it does not produce something installable on a real device or submittable to the App Store.
+# That requires an Apple Developer Program account (for code signing).
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+        env:
+          BASE44_LEGACY_SDK_IMPORTS: "true"
+          VITE_BASE44_APP_ID: ${{ secrets.VITE_BASE44_APP_ID }}
+          VITE_BASE44_APP_BASE_URL: ${{ secrets.VITE_BASE44_APP_BASE_URL }}
+
+      - name: Sync Capacitor iOS project
+        run: npx cap sync ios
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build for iOS Simulator (unsigned)
+        working-directory: ios/App
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App \
+            -sdk iphonesimulator -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Upload simulator build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: path-to-jannah-ios-simulator-build
+          path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 30

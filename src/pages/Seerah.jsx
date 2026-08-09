@@ -20,13 +20,19 @@ import {
   Languages,
   Headphones,
   Youtube,
+  Bookmark,
+  X,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventCard from "@/components/seerah/EventCard";
-import EventDetailDialog from "@/components/seerah/EventDetailDialog";
+import SeerahPageView from "@/components/seerah/SeerahPageView";
 import ProphetNameChip from "@/components/seerah/ProphetNameChip";
 import CharacterTraitCard from "@/components/seerah/CharacterTraitCard";
 import { cn } from "@/lib/utils";
+import { backfillSeed } from "@/lib/seedBackfill";
+import { SEED_SEERAH_EVENTS } from "@/data/seerahEventsSeed";
+import { getLastRead } from "@/lib/seerahProgress";
+import { useSeerahBookmarks } from "@/hooks/useSeerahBookmarks";
 
 const LOCATION_ICONS = {
   "Makkah Al-Mukarramah": Landmark,
@@ -69,7 +75,9 @@ export default function SeerahPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [contentLanguage, setContentLanguage] = useState("english");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [readerIndex, setReaderIndex] = useState(null);
+  const [lastRead, setLastRead] = useState(() => getLastRead());
+  const { bookmarks, isEventBookmarked, toggleEventBookmark } = useSeerahBookmarks();
 
   const [events, setEvents] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -81,12 +89,31 @@ export default function SeerahPage() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const [eventRecords, locationRecords, nameRecords, traitRecords] = await Promise.all([
+        let [eventRecords, locationRecords, nameRecords, traitRecords] = await Promise.all([
           SeerahEvent.list("year_ce"),
           SeerahLocation.list("-events_count"),
           ProphetName.list("-created_date"),
           CharacterTrait.list("-created_date"),
         ]);
+
+        // Ships the full, book-chapter-length detailed_text as an *overwrite* (not a fill-only
+        // backfill) — the whole point of this pass was replacing the old 2-3 sentence summaries,
+        // not just patching what was empty. See seedBackfill.js and seerahEventsSeed.js.
+        try {
+          eventRecords = await backfillSeed(SeerahEvent, "title", SEED_SEERAH_EVENTS, eventRecords, [], {
+            overwriteFields: [
+              "detailed_text",
+              "detailed_text_roman_urdu",
+              "key_lessons",
+              "key_lessons_roman_urdu",
+              "authentic_sources",
+            ],
+            sortField: "year_ce",
+          });
+        } catch (seedError) {
+          console.error("Error expanding Seerah event content:", seedError);
+        }
+
         setEvents(eventRecords);
         setLocations(locationRecords);
         setNames(nameRecords);
@@ -174,6 +201,24 @@ export default function SeerahPage() {
     return filtered;
   }, [displayEvents, activeTab, searchQuery]);
 
+  // The reader always pages through the full chronological timeline, regardless of which era
+  // tab or search filter was active when an event was opened — a stable page order is what
+  // makes "continue reading" and swiping to the next page meaningful.
+  const openEventInReader = (event) => {
+    const idx = displayEvents.findIndex((e) => e.title === event.title);
+    if (idx >= 0) setReaderIndex(idx);
+  };
+
+  const continueReadingEvent = useMemo(
+    () => (lastRead ? displayEvents.find((e) => e.title === lastRead.eventTitle) : null),
+    [displayEvents, lastRead]
+  );
+
+  const bookmarkedEvents = useMemo(
+    () => bookmarks.map((b) => displayEvents.find((e) => e.title === b.title)).filter(Boolean),
+    [bookmarks, displayEvents]
+  );
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
@@ -188,6 +233,75 @@ export default function SeerahPage() {
             our beloved Prophet Muhammad ﷺ
           </p>
         </div>
+
+        {(continueReadingEvent || bookmarkedEvents.length > 0) && (
+          <div className="max-w-2xl mx-auto mb-8 space-y-3">
+            {continueReadingEvent && (
+              <Card className="bg-card border-border glow-shadow">
+                <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <button
+                    type="button"
+                    onClick={() => openEventInReader(continueReadingEvent)}
+                    className="flex items-center gap-4 min-w-0 text-left flex-1"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                      <BookOpen className="w-5 h-5 text-accent" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Continue Reading</p>
+                      <p className="font-display font-medium text-primary truncate">
+                        {continueReadingEvent.title}
+                      </p>
+                    </div>
+                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button size="sm" onClick={() => openEventInReader(continueReadingEvent)}>
+                      Continue
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setLastRead(null);
+                        try {
+                          window.localStorage.removeItem("sirat-seerah-last-read");
+                        } catch {
+                          // ignore
+                        }
+                      }}
+                      aria-label="Dismiss continue reading"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {bookmarkedEvents.length > 0 && (
+              <Card className="bg-card border-border glow-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Bookmark className="w-4 h-4 text-accent" />
+                    <p className="text-sm font-semibold text-primary">Bookmarked Events</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {bookmarkedEvents.map((event) => (
+                      <button
+                        key={event.title}
+                        type="button"
+                        onClick={() => openEventInReader(event)}
+                        className="text-xs px-3 py-1.5 rounded-full border border-border hover:border-accent/40 hover:bg-accent/5 transition-colors text-primary"
+                      >
+                        {event.title}
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl mx-auto mb-8">
           <div className="relative flex-1 w-full">
@@ -242,7 +356,7 @@ export default function SeerahPage() {
               locations={displayLocations}
               names={displayNames}
               isLoading={isLoading}
-              onSelectEvent={setSelectedEvent}
+              onSelectEvent={openEventInReader}
             />
           </TabsContent>
 
@@ -252,7 +366,7 @@ export default function SeerahPage() {
               locations={displayLocations}
               names={displayNames}
               isLoading={isLoading}
-              onSelectEvent={setSelectedEvent}
+              onSelectEvent={openEventInReader}
             />
           </TabsContent>
 
@@ -262,7 +376,7 @@ export default function SeerahPage() {
               locations={displayLocations}
               names={displayNames}
               isLoading={isLoading}
-              onSelectEvent={setSelectedEvent}
+              onSelectEvent={openEventInReader}
             />
           </TabsContent>
 
@@ -331,11 +445,18 @@ export default function SeerahPage() {
         </Card>
       </div>
 
-      <EventDetailDialog
-        event={selectedEvent}
-        open={!!selectedEvent}
-        onOpenChange={(open) => !open && setSelectedEvent(null)}
-      />
+      {readerIndex !== null && (
+        <SeerahPageView
+          events={displayEvents}
+          initialIndex={readerIndex}
+          isEventBookmarked={isEventBookmarked}
+          onToggleBookmark={toggleEventBookmark}
+          onExit={() => {
+            setReaderIndex(null);
+            setLastRead(getLastRead());
+          }}
+        />
+      )}
     </div>
   );
 }

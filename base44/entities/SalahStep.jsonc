@@ -1,0 +1,49 @@
+{
+  "name": "SalahStep",
+  "type": "object",
+  "properties": {
+    "step_key": {
+      "type": "string",
+      "enum": [
+        "takbir_al_ihram",
+        "taawwudh",
+        "al_fatiha",
+        "surah_after_fatiha",
+        "ruku",
+        "rising_from_ruku",
+        "sujood",
+        "sitting_between_sujood",
+        "tashahhud",
+        "salawat_ibrahimiyyah",
+        "salam",
+        "eid_takbirs"
+      ],
+      "description": "Stable unique identifier referenced by src/data/salahStructure.js's rak'ah sequences. Each key is authored ONCE here and reused across however many rak'ahs actually include it — never repurposed as display order. 'eid_takbirs' is Eid-prayer-only (see buildEidSequence) and is excluded from the daily-prayer 'How to Pray' browsable list."
+    },
+    "order": {
+      "type": "number",
+      "description": "Position in the canonical reference listing (Takbir=1 .. Salam=11) for the browsable 'How to Pray' view only. Does not reflect how many times a step recurs within an actual prayer — that comes entirely from salahStructure.js."
+    },
+    "title": { "type": "string" },
+    "arabic_text": {
+      "type": "string",
+      "description": "Recitation for this step, in Arabic (empty for pure-posture steps with no fixed recitation)"
+    },
+    "transliteration": { "type": "string" },
+    "translation": { "type": "string", "description": "English translation/meaning" },
+    "what_to_do": {
+      "type": "string",
+      "description": "How to physically perform the step, including any role-based notes (e.g. Imam vs. praying alone), markdown"
+    },
+    "what_to_do_roman_urdu": { "type": "string", "description": "Same content, Roman Urdu, markdown" },
+    "ruling_status": {
+      "type": "string",
+      "description": "Short classification, e.g. 'Fard', 'Wajib', 'Sunnah Mu'akkadah' — kept short for a badge; nuance goes in madhab_notes"
+    },
+    "common_mistakes": { "type": "string", "description": "Frequent errors to avoid, markdown" },
+    "madhab_notes": { "type": "string", "description": "Madhab-specific variation, presented neutrally" },
+    "hadith_reference": { "type": "string", "description": "Qur'an/Hadith citation; left empty rather than an invented reference" },
+    "audio_url": { "type": "string", "description": "Optional recitation clip, reserved for future use" }
+  },
+  "required": ["step_key", "order", "title", "what_to_do"]
+}

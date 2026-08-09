@@ -22,6 +22,7 @@ import {
   Scale,
   Instagram,
   Radio,
+  MessageCircle,
   Info,
   CircleDashed,
   X,
@@ -49,6 +50,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import QuranMiniPlayer from "@/components/quran/QuranMiniPlayer";
 import { useQuranAudio } from "@/hooks/useQuranAudio";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const navigationItems = [
   { title: "Home", url: createPageUrl("Home"), icon: Sparkles, group: "main" },
@@ -89,12 +91,32 @@ const groupTitles = {
   support: "Support & Community",
 };
 
-// Official channels only — read-only announcements, not the in-app Community features.
-// TODO: replace with the real Instagram/broadcast channel URLs.
-const officialLinks = [
-  { label: "Official Instagram", href: "#", icon: Instagram },
-  { label: "Broadcast Channel", href: "#", icon: Radio },
-];
+// Official channels only — read-only announcements, not the in-app Community features. URLs
+// come from the admin-configurable SiteSettings row (useSiteSettings) rather than being
+// hardcoded — an entry is omitted entirely (not shown as a dead "#" link) until a real value is
+// set there.
+function buildOfficialLinks(settings) {
+  if (!settings) return [];
+  const links = [];
+  if (settings.instagram_url) {
+    links.push({ label: "Official Instagram", href: settings.instagram_url, icon: Instagram });
+  }
+  if (settings.whatsapp_number) {
+    links.push({
+      label: "WhatsApp",
+      href: `https://wa.me/${settings.whatsapp_number.replace(/[^\d]/g, "")}`,
+      icon: MessageCircle,
+    });
+  }
+  if (settings.broadcast_channel_url) {
+    links.push({
+      label: settings.broadcast_channel_label || "Broadcast Channel",
+      href: settings.broadcast_channel_url,
+      icon: Radio,
+    });
+  }
+  return links;
+}
 
 function NavLink({ item, isActive }) {
   const { isMobile, setOpenMobile } = useSidebar();
@@ -127,6 +149,8 @@ export default function Layout() {
   const location = useLocation();
   const [showMenuHint, setShowMenuHint] = useState(false);
   const { nowPlaying } = useQuranAudio();
+  const siteSettings = useSiteSettings();
+  const officialLinks = buildOfficialLinks(siteSettings);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -200,21 +224,23 @@ export default function Layout() {
             <div className="text-center group-data-[collapsible=icon]:hidden">
               <p className="text-xs text-primary font-medium">May Allah guide us all</p>
               <p className="text-sm text-accent mt-1 arabic-font">اللهم اهدنا فيمن هديت</p>
-              <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-border/60">
-                {officialLinks.map((link) => (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={link.label}
-                    aria-label={link.label}
-                    className="text-muted-foreground/60 hover:text-accent transition-colors duration-200"
-                  >
-                    <link.icon className="w-3.5 h-3.5" />
-                  </a>
-                ))}
-              </div>
+              {officialLinks.length > 0 && (
+                <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-border/60">
+                  {officialLinks.map((link) => (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={link.label}
+                      aria-label={link.label}
+                      className="text-muted-foreground/60 hover:text-accent transition-colors duration-200"
+                    >
+                      <link.icon className="w-3.5 h-3.5" />
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="hidden group-data-[collapsible=icon]:flex justify-center">
               <Heart className="w-4 h-4 text-accent" />

@@ -1,7 +1,22 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Play, Pause, Minus, Plus, AlertCircle, BookOpen, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Play,
+  Pause,
+  Minus,
+  Plus,
+  AlertCircle,
+  BookOpen,
+  Check,
+  Palette,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { surahs as quranSurahs } from "@/data/quranData";
 import { usePageVerses } from "@/hooks/usePageVerses";
@@ -370,8 +385,8 @@ export default function PageView({
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === "Escape") handleExit();
-      else if (e.key === "ArrowLeft" && hasNextPage) goToPage(1, pageNumber + 1);
-      else if (e.key === "ArrowRight" && hasPrevPage) goToPage(-1, pageNumber - 1);
+      else if (e.key === "ArrowLeft" && hasPrevPage) goToPage(-1, pageNumber - 1);
+      else if (e.key === "ArrowRight" && hasNextPage) goToPage(1, pageNumber + 1);
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -479,7 +494,17 @@ export default function PageView({
   // own display data only has this page's partial slice, but audio playback needs the whole
   // surah to sequence through ayahs and auto-advance the same way Verse View does.
   const { verses: audioVerses } = useQuranVerses(liveSurahMeta?.id, reciter, audioLanguage);
-  const { nowPlaying, toggleVerse, pause, resume } = useQuranAudio();
+  const {
+    nowPlaying,
+    toggleVerse,
+    pause,
+    resume,
+    volume,
+    setVolume,
+    toggleMute,
+    playNextSurah,
+    playPreviousSurah,
+  } = useQuranAudio();
 
   // Recitation plays continuously through the whole surah (same as Verse View), which can span
   // several real pages — once playback moves to an ayah that isn't on the page currently shown,
@@ -826,7 +851,7 @@ export default function PageView({
 
       <div
         className={cn(
-          "absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-2 px-4 py-3",
+          "absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-2 px-4 py-3",
           "backdrop-blur-md border-t transition-transform duration-300",
           showControls ? "translate-y-0" : "translate-y-full"
         )}
@@ -856,6 +881,24 @@ export default function PageView({
           <Plus className="w-4 h-4" />
         </button>
 
+        <div className="w-px h-6 mx-1" style={{ backgroundColor: palette.goldBorder }} aria-hidden="true" />
+
+        {/* Left = previous, right = next — the same spatial convention as the app's own "← Back"
+            button above and the skip-surah buttons below, so every left/right control in this
+            view agrees. (This trades away the "real Mushaf flips right-to-left" metaphor the
+            first version used, but that metaphor was only applied here — it clashed with every
+            other directional control on screen, which is what actually confused users.) */}
+        <button
+          type="button"
+          onClick={() => goToPage(-1, pageNumber - 1)}
+          disabled={!hasPrevPage}
+          aria-label="Previous page"
+          className="rounded-full w-9 h-9 flex items-center justify-center disabled:opacity-40"
+          style={{ border: `1px solid ${palette.goldBorderStrong}`, color: palette.text }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+
         <button
           type="button"
           onClick={handlePlayPause}
@@ -867,9 +910,79 @@ export default function PageView({
           {isThisAyahPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
         </button>
 
+        <button
+          type="button"
+          onClick={() => goToPage(1, pageNumber + 1)}
+          disabled={!hasNextPage}
+          aria-label="Next page"
+          className="rounded-full w-9 h-9 flex items-center justify-center disabled:opacity-40"
+          style={{ border: `1px solid ${palette.goldBorderStrong}`, color: palette.text }}
+        >
+          <ArrowRight className="w-4 h-4" />
+        </button>
+
+        {/* Recitation plays continuously across surah boundaries (a playlist, not a single-page
+            clip) — these controls jump the *playing* surah, which may differ from whichever
+            surah's page is on screen right now. Only shown once something is actually playing,
+            since they're meaningless otherwise; this is the same "skip surah" and volume the
+            floating mini-player offers, made reachable here since Page View's full-screen
+            overlay sits above (and hides) that mini-player. */}
+        {nowPlaying && (
+          <>
+            <div className="w-px h-6 mx-1" style={{ backgroundColor: palette.goldBorder }} aria-hidden="true" />
+
+            <button
+              type="button"
+              onClick={playPreviousSurah}
+              disabled={!nowPlaying.hasPreviousSurah}
+              aria-label="Previous surah"
+              className="rounded-full w-9 h-9 flex items-center justify-center disabled:opacity-40"
+              style={{ border: `1px solid ${palette.goldBorderStrong}`, color: palette.text }}
+            >
+              <SkipBack className="w-4 h-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleMute}
+              aria-label={volume === 0 ? "Unmute" : "Mute"}
+              className="rounded-full w-9 h-9 flex items-center justify-center"
+              style={{ color: palette.text }}
+            >
+              {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              aria-label="Volume"
+              className="hidden sm:block w-16 h-1 accent-current cursor-pointer"
+              style={{ color: palette.gold }}
+            />
+
+            <button
+              type="button"
+              onClick={playNextSurah}
+              disabled={!nowPlaying.hasNextSurah}
+              aria-label="Next surah"
+              className="rounded-full w-9 h-9 flex items-center justify-center disabled:opacity-40"
+              style={{ border: `1px solid ${palette.goldBorderStrong}`, color: palette.text }}
+            >
+              <SkipForward className="w-4 h-4" />
+            </button>
+          </>
+        )}
+
         <div className="w-px h-6 mx-1" style={{ backgroundColor: palette.goldBorder }} aria-hidden="true" />
 
-        <div className="flex items-center gap-1.5">
+        {/* Bare color dots don't read as a control on their own, and their tooltip only shows on
+            hover — no help on mobile. A visible icon label gives touch users the same "this
+            changes the page theme" cue a hover would. */}
+        <div className="flex items-center gap-1.5" role="group" aria-label="Reading theme">
+          <Palette className="w-3.5 h-3.5 mr-0.5" style={{ color: palette.textMuted }} aria-hidden="true" />
           {THEME_ORDER.map((key) => (
             <ThemeSwatch key={key} themeKey={key} active={themeKey === key} onClick={() => setThemeKey(key)} />
           ))}

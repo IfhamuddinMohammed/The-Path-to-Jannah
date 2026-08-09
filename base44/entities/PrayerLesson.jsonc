@@ -16,7 +16,9 @@
         "facing_qibla",
         "prayer_times",
         "adhan",
-        "iqamah"
+        "iqamah",
+        "khutbah",
+        "eid"
       ],
       "description": "Which Learn Salah topic group this lesson belongs to"
     },

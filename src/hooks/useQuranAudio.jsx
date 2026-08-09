@@ -161,6 +161,30 @@ export function QuranAudioProvider({ children }) {
   const playNextSurah = useCallback(() => playAdjacentSurah(1), [playAdjacentSurah]);
   const playPreviousSurah = useCallback(() => playAdjacentSurah(-1), [playAdjacentSurah]);
 
+  // Switching reciter/language mid-playback previously did nothing until the next unrelated
+  // play click — the old voice just kept playing (and even carried into auto-advanced ayahs and
+  // surahs) since nothing re-synced the player with the picker. Re-point the *current* ayah at
+  // the newly chosen voice immediately: restart from its beginning (not the same timestamp —
+  // different reciters pace ayahs differently, so a preserved timestamp wouldn't land anywhere
+  // meaningful) and keep whatever play/pause state it was already in.
+  const changeVoice = useCallback(
+    (voice) => {
+      if (!surah || currentIndex == null) return;
+      const surahMeta = quranSurahs.find((s) => s.id === surah.id);
+      if (!surahMeta) return;
+      const versesList = buildSurahVerses(surahMeta, voice);
+      setSurah({ id: surahMeta.id, name: surahMeta.name, arabic: surahMeta.arabic, voice });
+      setVerses(versesList);
+      if (audioRef.current) {
+        audioRef.current.src = versesList[currentIndex].audio;
+        if (isPlaying) {
+          audioRef.current.play().catch(() => setIsPlaying(false));
+        }
+      }
+    },
+    [surah, currentIndex, isPlaying]
+  );
+
   const handleEnded = useCallback(() => {
     setCurrentIndex((idx) => {
       if (verses && idx != null && idx + 1 < verses.length) {
@@ -238,6 +262,7 @@ export function QuranAudioProvider({ children }) {
     stop,
     playNextSurah,
     playPreviousSurah,
+    changeVoice,
   };
 
   return (

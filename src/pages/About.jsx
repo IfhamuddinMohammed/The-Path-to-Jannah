@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MoonStar, Heart, MessageCircle } from "lucide-react";
 import AmeenCounter from "@/components/about/AmeenCounter";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const PILLARS = [
   {
@@ -24,6 +25,9 @@ const PILLARS = [
 ];
 
 export default function AboutPage() {
+  const settings = useSiteSettings();
+  const feedbackEmail = settings?.feedback_email;
+
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -122,13 +126,14 @@ export default function AboutPage() {
             <p className="text-sm text-foreground/90 mb-1">
               Found a typo, or have a suggestion to improve this platform?
             </p>
-            {/* TODO: replace with the real support/feedback email */}
-            <a
-              href="mailto:feedback@example.com"
-              className="text-sm font-medium text-primary hover:text-accent underline underline-offset-4"
-            >
-              Send Feedback
-            </a>
+            {feedbackEmail && (
+              <a
+                href={`mailto:${feedbackEmail}`}
+                className="text-sm font-medium text-primary hover:text-accent underline underline-offset-4"
+              >
+                Send Feedback
+              </a>
+            )}
           </CardContent>
         </Card>
       </div>

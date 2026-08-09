@@ -72,8 +72,13 @@ export default function QuranPage() {
   const [readingMode, setReadingMode] = useState("verse");
   const [resumeTarget, setResumeTarget] = useState(null);
   const [lastRead, setLastRead] = useState(() => getLastRead());
-  const { nowPlaying, toggleVerse: toggleAudioVerse, pause: pauseAudio, resume: resumeAudio } =
-    useQuranAudio();
+  const {
+    nowPlaying,
+    toggleVerse: toggleAudioVerse,
+    pause: pauseAudio,
+    resume: resumeAudio,
+    changeVoice,
+  } = useQuranAudio();
 
   const { verses, loading, error, retry, isOffline } = useQuranVerses(
     selectedSurah?.id,
@@ -145,6 +150,22 @@ export default function QuranPage() {
     ? { id: selectedSurah.id, name: selectedSurah.name, arabic: selectedSurah.arabic }
     : null;
   const voice = { language: audioLanguage, reciter: selectedReciter };
+
+  // Picking a new reciter/language mid-playback should re-point the ayah that's already
+  // playing at that voice right away, not silently keep the old one going until some unrelated
+  // future play click. Skipped on first mount (nothing is playing yet, and this must only fire
+  // on an actual picker change, not whenever `nowPlaying` itself changes for other reasons like
+  // normal ayah advancement).
+  const isFirstVoiceRender = useRef(true);
+  useEffect(() => {
+    if (isFirstVoiceRender.current) {
+      isFirstVoiceRender.current = false;
+      return;
+    }
+    if (nowPlaying) changeVoice({ language: audioLanguage, reciter: selectedReciter });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedReciter, audioLanguage]);
+
   const isThisSurahActive =
     !!nowPlaying && !!selectedSurah && nowPlaying.surahId === selectedSurah.id;
   const isThisSurahPlaying = isThisSurahActive && nowPlaying.isPlaying;
