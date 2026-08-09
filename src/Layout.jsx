@@ -51,6 +51,7 @@ import ThemeToggle from "@/components/layout/ThemeToggle";
 import QuranMiniPlayer from "@/components/quran/QuranMiniPlayer";
 import { useQuranAudio } from "@/hooks/useQuranAudio";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import Seo from "@/components/seo/Seo";
 
 const navigationItems = [
   { title: "Home", url: createPageUrl("Home"), icon: Sparkles, group: "main" },
@@ -170,6 +171,7 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
+      <Seo />
       <div className="min-h-screen flex w-full marble-gradient">
         {/* Desktop Sidebar */}
         <Sidebar collapsible="icon" className="hidden md:flex border-r border-border bg-sidebar backdrop-blur-sm">

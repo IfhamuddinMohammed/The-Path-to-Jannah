@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -8,28 +9,33 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import Layout from './Layout';
-import Home from './pages/Home';
-import Quran from './pages/Quran';
-import Guidance from './pages/Guidance';
-import Hadith from './pages/Hadith';
-import Stories from './pages/Stories';
-import Videos from './pages/Videos';
-import Duas from './pages/Duas';
-import FAQ from './pages/FAQ';
-import Community from './pages/Community';
-import PrayerTimes from './pages/PrayerTimes';
-import Qibla from './pages/Qibla';
-import Names from './pages/Names';
-import Tasbeeh from './pages/Tasbeeh';
-import Seerah from './pages/Seerah';
-import Quiz from './pages/Quiz';
-import Kids from './pages/Kids';
-import NewMuslims from './pages/NewMuslims';
-import Fiqh from './pages/Fiqh';
-import Huqooq from './pages/Huqooq';
-import About from './pages/About';
-import MosqueFinder from './pages/MosqueFinder';
-import PrayerAcademy from './pages/PrayerAcademy';
+
+// Lazy-loaded per route: previously every page was statically imported here, so visiting "/"
+// downloaded the code for all 21+ pages (Quran, Hadith, Seerah, Kids, Quiz, MosqueFinder, etc.)
+// up front in one ~2.3MB bundle before anything could render. Splitting per-route means each
+// page's code only loads when its route is actually visited.
+const Home = lazy(() => import('./pages/Home'));
+const Quran = lazy(() => import('./pages/Quran'));
+const Guidance = lazy(() => import('./pages/Guidance'));
+const Hadith = lazy(() => import('./pages/Hadith'));
+const Stories = lazy(() => import('./pages/Stories'));
+const Videos = lazy(() => import('./pages/Videos'));
+const Duas = lazy(() => import('./pages/Duas'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const Community = lazy(() => import('./pages/Community'));
+const PrayerTimes = lazy(() => import('./pages/PrayerTimes'));
+const Qibla = lazy(() => import('./pages/Qibla'));
+const Names = lazy(() => import('./pages/Names'));
+const Tasbeeh = lazy(() => import('./pages/Tasbeeh'));
+const Seerah = lazy(() => import('./pages/Seerah'));
+const Quiz = lazy(() => import('./pages/Quiz'));
+const Kids = lazy(() => import('./pages/Kids'));
+const NewMuslims = lazy(() => import('./pages/NewMuslims'));
+const Fiqh = lazy(() => import('./pages/Fiqh'));
+const Huqooq = lazy(() => import('./pages/Huqooq'));
+const About = lazy(() => import('./pages/About'));
+const MosqueFinder = lazy(() => import('./pages/MosqueFinder'));
+const PrayerAcademy = lazy(() => import('./pages/PrayerAcademy'));
 import { AdhaanProvider } from '@/hooks/useAdhaan';
 import AdhaanBanner from '@/components/adhaan/AdhaanBanner';
 import { QuranAudioProvider } from '@/hooks/useQuranAudio';
@@ -62,35 +68,43 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/Home" element={<Home />} />
-        <Route path="/Quran" element={<Quran />} />
-        <Route path="/Guidance" element={<Guidance />} />
-        <Route path="/Hadith" element={<Hadith />} />
-        <Route path="/Stories" element={<Stories />} />
-        <Route path="/Videos" element={<Videos />} />
-        <Route path="/Duas" element={<Duas />} />
-        <Route path="/FAQ" element={<FAQ />} />
-        <Route path="/Community" element={<Community />} />
-        <Route path="/PrayerTimes" element={<PrayerTimes />} />
-        <Route path="/Qibla" element={<Qibla />} />
-        <Route path="/Names" element={<Names />} />
-        <Route path="/Tasbeeh" element={<Tasbeeh />} />
-        <Route path="/Seerah" element={<Seerah />} />
-        <Route path="/Quiz" element={<Quiz />} />
-        <Route path="/Kids" element={<Kids />} />
-        <Route path="/NewMuslims" element={<NewMuslims />} />
-        <Route path="/Fiqh" element={<Fiqh />} />
-        <Route path="/Huqooq" element={<Huqooq />} />
-        <Route path="/About" element={<About />} />
-        <Route path="/MosqueFinder" element={<MosqueFinder />} />
-        <Route path="/PrayerAcademy" element={<PrayerAcademy />} />
-        {/* Add your page Route elements here */}
-      </Route>
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <Suspense
+      fallback={
+        <div className="fixed inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/Home" element={<Home />} />
+          <Route path="/Quran" element={<Quran />} />
+          <Route path="/Guidance" element={<Guidance />} />
+          <Route path="/Hadith" element={<Hadith />} />
+          <Route path="/Stories" element={<Stories />} />
+          <Route path="/Videos" element={<Videos />} />
+          <Route path="/Duas" element={<Duas />} />
+          <Route path="/FAQ" element={<FAQ />} />
+          <Route path="/Community" element={<Community />} />
+          <Route path="/PrayerTimes" element={<PrayerTimes />} />
+          <Route path="/Qibla" element={<Qibla />} />
+          <Route path="/Names" element={<Names />} />
+          <Route path="/Tasbeeh" element={<Tasbeeh />} />
+          <Route path="/Seerah" element={<Seerah />} />
+          <Route path="/Quiz" element={<Quiz />} />
+          <Route path="/Kids" element={<Kids />} />
+          <Route path="/NewMuslims" element={<NewMuslims />} />
+          <Route path="/Fiqh" element={<Fiqh />} />
+          <Route path="/Huqooq" element={<Huqooq />} />
+          <Route path="/About" element={<About />} />
+          <Route path="/MosqueFinder" element={<MosqueFinder />} />
+          <Route path="/PrayerAcademy" element={<PrayerAcademy />} />
+          {/* Add your page Route elements here */}
+        </Route>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 

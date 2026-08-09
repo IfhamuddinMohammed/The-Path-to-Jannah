@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/sitemap.xml

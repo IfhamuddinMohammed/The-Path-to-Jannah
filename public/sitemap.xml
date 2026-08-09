@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Static sitemap listing every real route from src/App.jsx. "/" is intentionally omitted — it
+  renders the same page as "/Home" (which every in-app link actually points to via
+  createPageUrl("Home")), so only the one canonical URL is listed to avoid splitting
+  duplicate-content signal across two identical pages. Update this file when a route is added to
+  App.jsx and src/data/pageMeta.js.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Home</loc><priority>1.0</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Quran</loc><priority>0.9</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Hadith</loc><priority>0.9</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Seerah</loc><priority>0.9</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/PrayerAcademy</loc><priority>0.9</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/PrayerTimes</loc><priority>0.8</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Qibla</loc><priority>0.8</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Guidance</loc><priority>0.7</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Stories</loc><priority>0.7</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Videos</loc><priority>0.7</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Duas</loc><priority>0.7</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Names</loc><priority>0.7</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Tasbeeh</loc><priority>0.6</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Quiz</loc><priority>0.6</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Kids</loc><priority>0.6</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/NewMuslims</loc><priority>0.7</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Fiqh</loc><priority>0.7</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Huqooq</loc><priority>0.6</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/MosqueFinder</loc><priority>0.7</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/FAQ</loc><priority>0.5</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/Community</loc><priority>0.5</priority></url>
+  <url><loc>https://the-path-to-jannah-copy-copy-c11d62f8.base44.app/About</loc><priority>0.5</priority></url>
+</urlset>

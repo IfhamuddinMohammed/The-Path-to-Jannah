@@ -10,7 +10,42 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Amiri+Quran&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json" />
-    <title>SIRAT</title>
+
+    <!--
+      Sitewide fallback meta/OG/structured-data — the ONLY thing crawlers and link-preview bots
+      (WhatsApp, Slack, Twitter, etc.) that don't execute JS will ever see, so these must be
+      real, sensible defaults, not placeholders.
+
+      Every tag below marked data-seo-fallback is removed by src/components/seo/Seo.jsx on
+      mount and replaced with react-helmet-async's per-route version — react-helmet-async only
+      ever manages tags it rendered itself, so without that explicit removal these static ones
+      would sit alongside Helmet's, leaving two conflicting <meta name="description"> (etc.)
+      tags in the DOM for every JS-executing client (browsers, Google's renderer).
+    -->
+    <title>SIRAT — Guiding Hearts Toward Islam</title>
+    <meta data-seo-fallback name="description" content="A free, authentic Islamic platform: the Qur'an with translations and audio, Hadith, Seerah, prayer times, Qibla finder, and daily worship tools — grounded in the Qur'an and Sunnah." />
+
+    <meta data-seo-fallback property="og:type" content="website" />
+    <meta data-seo-fallback property="og:site_name" content="SIRAT" />
+    <meta data-seo-fallback property="og:title" content="SIRAT — Guiding Hearts Toward Islam" />
+    <meta data-seo-fallback property="og:description" content="A free, authentic Islamic platform: the Qur'an with translations and audio, Hadith, Seerah, prayer times, Qibla finder, and daily worship tools." />
+    <meta data-seo-fallback property="og:image" content="/apple-touch-icon.png" />
+
+    <meta data-seo-fallback name="twitter:card" content="summary" />
+    <meta data-seo-fallback name="twitter:title" content="SIRAT — Guiding Hearts Toward Islam" />
+    <meta data-seo-fallback name="twitter:description" content="A free, authentic Islamic platform: the Qur'an with translations and audio, Hadith, Seerah, prayer times, Qibla finder, and daily worship tools." />
+    <meta data-seo-fallback name="twitter:image" content="/apple-touch-icon.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "SIRAT",
+        "alternateName": "Path to Jannah",
+        "description": "A free, authentic Islamic platform: the Qur'an with translations and audio, Hadith, Seerah, prayer times, Qibla finder, and daily worship tools.",
+        "url": "https://the-path-to-jannah-copy-copy-c11d62f8.base44.app"
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
