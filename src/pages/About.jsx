@@ -90,7 +90,7 @@ export default function AboutPage() {
                 "May Allah forgive him, elevate his status among the guided, expand his grave,
                 fill it with light, and grant him the highest level of Jannat al-Firdaus." — Ameen.
               </p>
-              <AmeenCounter initialCount={213} />
+              <AmeenCounter settings={settings} />
             </div>
 
             <p className="text-xs text-muted-foreground text-right">

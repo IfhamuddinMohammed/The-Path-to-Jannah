@@ -13,5 +13,9 @@ export const SEED_SITE_SETTINGS = [
     whatsapp_number: "+918686850232",
     broadcast_channel_label: "Broadcast Channel",
     broadcast_channel_url: "",
+    // Starting baseline carried over from the number already shown to visitors before this
+    // counter was backed by real data — not in SETTINGS_FIELDS below, so it's only ever
+    // applied once when the row is first created, never re-filled on top of real clicks.
+    dedication_ameen_count: 213,
   },
 ];

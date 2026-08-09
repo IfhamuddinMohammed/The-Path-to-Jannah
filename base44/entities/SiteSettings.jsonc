@@ -25,6 +25,11 @@
     "broadcast_channel_url": {
       "type": "string",
       "description": "URL of the official broadcast/announcement channel, shown as an icon link in the sidebar footer. Leave empty to hide the icon."
+    },
+    "dedication_ameen_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Real running total of the About page's 'Say Ameen' button for the dedication tribute. Seeded once at creation, then only ever changed by AmeenCounter.jsx's increments/decrements — never re-applied by the settings backfill, since a legitimate count of 0 must not be mistaken for 'still unset'."
     }
   },
   "required": ["key"]

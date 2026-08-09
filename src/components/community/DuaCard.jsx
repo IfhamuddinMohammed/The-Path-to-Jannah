@@ -8,6 +8,7 @@ import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DuaRequest } from "@/entities/all";
 import { useToast } from "@/components/ui/use-toast";
+import { hasAlreadySaidAmeen, setAlreadySaidAmeen } from "@/lib/ameenTracking";
 
 const CATEGORY_STYLES = {
   Health: "bg-primary/10 text-primary border-primary/20",
@@ -19,7 +20,7 @@ const CATEGORY_STYLES = {
 
 export default function DuaCard({ dua, onAameenChange }) {
   const [aameenCount, setAameenCount] = useState(dua.aameen_count || 0);
-  const [hasSaidAameen, setHasSaidAameen] = useState(false);
+  const [hasSaidAameen, setHasSaidAameen] = useState(() => hasAlreadySaidAmeen(dua.id));
   const [showBurst, setShowBurst] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -31,10 +32,12 @@ export default function DuaCard({ dua, onAameenChange }) {
 
   const toggleAameen = async () => {
     if (saving) return;
-    const next = hasSaidAameen ? aameenCount - 1 : aameenCount + 1;
+    const nextHasSaid = !hasSaidAameen;
+    const next = nextHasSaid ? aameenCount + 1 : aameenCount - 1;
     setAameenCount(next);
-    setHasSaidAameen((v) => !v);
-    if (!hasSaidAameen) {
+    setHasSaidAameen(nextHasSaid);
+    setAlreadySaidAmeen(dua.id, nextHasSaid);
+    if (nextHasSaid) {
       setShowBurst(true);
       setTimeout(() => setShowBurst(false), 700);
     }
@@ -47,7 +50,8 @@ export default function DuaCard({ dua, onAameenChange }) {
       console.error("Error updating Aameen count:", error);
       // Roll back on failure so the displayed count doesn't drift from reality.
       setAameenCount(aameenCount);
-      setHasSaidAameen((v) => !v);
+      setHasSaidAameen(hasSaidAameen);
+      setAlreadySaidAmeen(dua.id, hasSaidAameen);
       toast({
         variant: "destructive",
         title: "Couldn't record your Aameen",
