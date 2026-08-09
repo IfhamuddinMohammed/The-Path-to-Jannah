@@ -10,6 +10,7 @@ import { DuaRequest } from "@/entities/all";
 import { useToast } from "@/components/ui/use-toast";
 import { isMine, unmarkAsMine } from "@/lib/ownership";
 import { hasAlreadySaidAmeen, setAlreadySaidAmeen } from "@/lib/ameenTracking";
+import { parseServerDate } from "@/lib/serverDate";
 
 const CATEGORY_STYLES = {
   Health: "bg-primary/10 text-primary border-primary/20",
@@ -30,7 +31,7 @@ export default function DuaCard({ dua, onAameenChange, onDelete }) {
   const isMineDua = isMine("dua_requests", dua.id);
   const posterLabel = dua.name || `Anonymous ${dua.gender === "sister" ? "Sister" : "Brother"}`;
   const timeAgo = dua.created_date
-    ? formatDistanceToNow(new Date(dua.created_date), { addSuffix: true })
+    ? formatDistanceToNow(parseServerDate(dua.created_date), { addSuffix: true })
     : "Just now";
 
   const handleDelete = async () => {

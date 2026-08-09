@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import { useArticleBookmarks } from "@/hooks/useArticleBookmarks";
 import { cn } from "@/lib/utils";
+import { parseServerDate } from "@/lib/serverDate";
 
 // This page is for guidance essays only — "prophets" and "sahaba" articles
 // belong to the dedicated Stories page and are excluded here so the two
@@ -143,7 +144,7 @@ export default function GuidancePage() {
                 </Badge>
                 <Badge variant="outline">
                   <Clock className="w-3 h-3 mr-1" />
-                  {format(new Date(selectedArticle.created_date), "MMM d, yyyy")}
+                  {format(parseServerDate(selectedArticle.created_date), "MMM d, yyyy")}
                 </Badge>
               </div>
 
@@ -290,7 +291,7 @@ export default function GuidancePage() {
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         <Clock className="w-3 h-3 mr-1" />
-                        {format(new Date(article.created_date), "MMM d")}
+                        {format(parseServerDate(article.created_date), "MMM d")}
                       </Badge>
                     </div>
                     <button

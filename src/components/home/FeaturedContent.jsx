@@ -7,6 +7,7 @@ import { createPageUrl } from "@/utils";
 import { ArrowRight, Clock, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { parseServerDate } from "@/lib/serverDate";
 
 export default function FeaturedContent({ articles, isLoading }) {
   if (isLoading) {
@@ -82,7 +83,7 @@ export default function FeaturedContent({ articles, isLoading }) {
                   </Badge>
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                     <Clock className="w-3 h-3 mr-1" />
-                    {format(new Date(article.created_date), "MMM d")}
+                    {format(parseServerDate(article.created_date), "MMM d")}
                   </Badge>
                 </div>
 

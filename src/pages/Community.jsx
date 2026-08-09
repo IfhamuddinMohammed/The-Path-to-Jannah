@@ -13,10 +13,11 @@ import { postFilters } from "@/data/communityData";
 import { DuaRequest, CommunityPost } from "@/entities/all";
 import { useToast } from "@/components/ui/use-toast";
 import { markAsMine } from "@/lib/ownership";
+import { parseServerDate } from "@/lib/serverDate";
 
 function isToday(dateString) {
   if (!dateString) return false;
-  const d = new Date(dateString);
+  const d = parseServerDate(dateString);
   const now = new Date();
   return (
     d.getFullYear() === now.getFullYear() &&
@@ -255,6 +256,7 @@ export default function CommunityPage() {
                         onLikeChange={handleDiscussionLikeChange}
                         onEdit={handleDiscussionEdit}
                         onDelete={handleDiscussionDelete}
+                        onCommentCountChange={(id, count) => handleDiscussionEdit(id, { comment_count: count })}
                       />
                     ))}
                   </div>
@@ -293,6 +295,7 @@ export default function CommunityPage() {
                         onLikeChange={handleNewMuslimLikeChange}
                         onEdit={handleNewMuslimEdit}
                         onDelete={handleNewMuslimDelete}
+                        onCommentCountChange={(id, count) => handleNewMuslimEdit(id, { comment_count: count })}
                       />
                     ))}
                   </div>

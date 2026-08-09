@@ -31,6 +31,11 @@
       "type": "number",
       "default": 0,
       "description": "Number of likes"
+    },
+    "comment_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Denormalized count of PostComment rows for this post, so the comment icon can show a number before comments are lazily loaded on expand. Kept in sync by DiscussionPost.jsx whenever a comment is added or deleted."
     }
   },
   "required": ["section", "category", "content"]

@@ -18,6 +18,7 @@ import { CommunityPost, PostComment } from "@/entities/all";
 import { useToast } from "@/components/ui/use-toast";
 import { markAsMine, unmarkAsMine, isMine } from "@/lib/ownership";
 import { COMMENT_CONTENT_MAX_LENGTH, POST_CONTENT_MAX_LENGTH } from "@/data/communityData";
+import { parseServerDate } from "@/lib/serverDate";
 
 const CATEGORY_STYLES = {
   Reflection: "bg-primary/10 text-primary border-primary/20",
@@ -34,7 +35,7 @@ function initialsOf(name) {
     .toUpperCase();
 }
 
-export default function DiscussionPost({ post, onLikeChange, onEdit, onDelete }) {
+export default function DiscussionPost({ post, onLikeChange, onEdit, onDelete, onCommentCountChange }) {
   const [likes, setLikes] = useState(post.likes || 0);
   const [hasLiked, setHasLiked] = useState(false);
   const [savingLike, setSavingLike] = useState(false);
@@ -53,7 +54,7 @@ export default function DiscussionPost({ post, onLikeChange, onEdit, onDelete })
   const displayAuthor = isMinePost ? "You" : post.author_name;
 
   const timeAgo = post.created_date
-    ? formatDistanceToNow(new Date(post.created_date), { addSuffix: true })
+    ? formatDistanceToNow(parseServerDate(post.created_date), { addSuffix: true })
     : "Just now";
 
   const toggleLike = async () => {
@@ -98,6 +99,9 @@ export default function DiscussionPost({ post, onLikeChange, onEdit, onDelete })
       const created = await PostComment.create({ post_id: post.id, author: "Anonymous", content });
       markAsMine("post_comments", created.id);
       setComments((prev) => [created, ...(prev || [])]);
+      const nextCount = (post.comment_count || 0) + 1;
+      await CommunityPost.update(post.id, { comment_count: nextCount });
+      onCommentCountChange?.(post.id, nextCount);
     } catch (error) {
       console.error("Error posting comment:", error);
       toast({
@@ -178,6 +182,9 @@ export default function DiscussionPost({ post, onLikeChange, onEdit, onDelete })
       await PostComment.delete(commentId);
       unmarkAsMine("post_comments", commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
+      const nextCount = Math.max(0, (post.comment_count || 0) - 1);
+      await CommunityPost.update(post.id, { comment_count: nextCount });
+      onCommentCountChange?.(post.id, nextCount);
     } catch (error) {
       console.error("Error deleting comment:", error);
       toast({
@@ -246,7 +253,7 @@ export default function DiscussionPost({ post, onLikeChange, onEdit, onDelete })
           </Button>
           <Button variant="ghost" size="sm" onClick={toggleExpanded}>
             <MessageCircle className="w-4 h-4 mr-1.5" />
-            {comments === null ? "" : comments.length}
+            {comments === null ? post.comment_count || 0 : comments.length}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -302,7 +309,7 @@ export default function DiscussionPost({ post, onLikeChange, onEdit, onDelete })
                           <p className="text-xs font-medium text-foreground">{commentAuthor}</p>
                           <p className="text-[10px] text-muted-foreground">
                             {comment.created_date
-                              ? formatDistanceToNow(new Date(comment.created_date), { addSuffix: true })
+                              ? formatDistanceToNow(parseServerDate(comment.created_date), { addSuffix: true })
                               : "Just now"}
                           </p>
                         </div>
