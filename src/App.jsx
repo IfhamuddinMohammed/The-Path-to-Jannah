@@ -41,18 +41,15 @@ import AdhaanBanner from '@/components/adhaan/AdhaanBanner';
 import { QuranAudioProvider } from '@/hooks/useQuranAudio';
 import { PrayerPreferencesProvider } from '@/hooks/usePrayerPreferences';
 import { useHardwareBackButton } from '@/hooks/useHardwareBackButton';
+import SplashScreen from '@/components/SplashScreen';
 // Add page imports here
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
+  // Shown while checking app public settings or auth — briefly, right after the native splash
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   // Handle authentication errors
