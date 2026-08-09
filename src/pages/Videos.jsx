@@ -3,10 +3,33 @@ import { Video } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Video as VideoIcon, User, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Search, Video as VideoIcon, User, Clock, Play } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Handles every common YouTube URL shape (watch?v=, youtu.be/, /embed/, /shorts/), each of which
+// can also carry extra query params (&t=, &list=, ?si=, etc.) that a naive split would leave
+// stuck onto the id. Returns null for anything else (a non-YouTube video_url, or a malformed
+// one) so callers can fall back to linking out instead of embedding a broken player.
+function getYouTubeId(url) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") return parsed.pathname.slice(1).split("/")[0] || null;
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      if (parsed.pathname === "/watch") return parsed.searchParams.get("v");
+      const match = parsed.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/);
+      if (match) return match[1];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function VideosPage() {
+  const [playingVideo, setPlayingVideo] = useState(null);
   const [videos, setVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({ query: "", category: "all", scholar: "all", language: "all" });
@@ -63,24 +86,62 @@ export default function VideosPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? Array(6).fill(0).map((_, i) => <Card key={i}><Skeleton className="aspect-video rounded-t-lg" /><CardHeader><Skeleton className="h-6 w-full" /></CardHeader><CardContent><Skeleton className="h-4 w-1/2" /></CardContent></Card>)
-          : filteredVideos.map((video) => (
-            <a href={video.video_url} target="_blank" rel="noopener noreferrer" key={video.id}>
-              <Card className="hover:shadow-lg transition-shadow">
-                <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-                  <img src={video.thumbnail_url || `https://i.ytimg.com/vi/${new URL(video.video_url).searchParams.get('v')}/hqdefault.jpg`} alt={video.title} className="w-full h-full object-cover" />
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-lg text-primary">{video.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex justify-between gap-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1 min-w-0"><User className="w-3 h-3 shrink-0" /> <span className="truncate">{video.scholar || 'N/A'}</span></div>
-                  <div className="flex items-center gap-1 shrink-0"><Clock className="w-3 h-3" /> {video.duration || 'N/A'}</div>
-                </CardContent>
-              </Card>
-            </a>
-          ))}
+          : filteredVideos.map((video) => {
+            const youtubeId = getYouTubeId(video.video_url);
+            return (
+              // A YouTube video plays inline via the embed below; anything that isn't a
+              // recognized YouTube URL (a different host, or malformed) still opens in a new
+              // tab, since there's no embeddable player to open for it.
+              <button
+                type="button"
+                onClick={() => (youtubeId ? setPlayingVideo(video) : window.open(video.video_url, "_blank", "noopener,noreferrer"))}
+                key={video.id}
+                className="text-left"
+              >
+                <Card className="hover:shadow-lg transition-shadow">
+                  <div className="relative aspect-video bg-muted rounded-t-lg overflow-hidden group">
+                    <img
+                      src={video.thumbnail_url || (youtubeId ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg` : undefined)}
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                      <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Play className="w-5 h-5 text-primary-foreground ml-0.5" fill="currentColor" />
+                      </div>
+                    </div>
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg text-primary">{video.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex justify-between gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1 min-w-0"><User className="w-3 h-3 shrink-0" /> <span className="truncate">{video.scholar || 'N/A'}</span></div>
+                    <div className="flex items-center gap-1 shrink-0"><Clock className="w-3 h-3" /> {video.duration || 'N/A'}</div>
+                  </CardContent>
+                </Card>
+              </button>
+            );
+          })}
         </div>
       </div>
+
+      <Dialog open={!!playingVideo} onOpenChange={(open) => !open && setPlayingVideo(null)}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black border-0 [&>button]:text-white [&>button]:opacity-90 [&>button]:hover:opacity-100">
+          {playingVideo && (
+            <div className="aspect-video">
+              <DialogTitle className="sr-only">{playingVideo.title}</DialogTitle>
+              <iframe
+                key={playingVideo.id}
+                src={`https://www.youtube.com/embed/${getYouTubeId(playingVideo.video_url)}?autoplay=1`}
+                title={playingVideo.title}
+                className="w-full h-full"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
