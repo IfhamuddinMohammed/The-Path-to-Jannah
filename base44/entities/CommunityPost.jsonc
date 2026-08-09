@@ -4,8 +4,8 @@
   "properties": {
     "author_name": {
       "type": "string",
-      "default": "You",
-      "description": "Display name of the poster"
+      "default": "Anonymous",
+      "description": "Display name of the poster as stored — the same value is shown to every viewer except the original poster, who instead sees 'You' client-side (see isMine() in src/lib/ownership.js). Never the literal string 'You'."
     },
     "author_role": {
       "type": "string",
@@ -24,6 +24,7 @@
     },
     "content": {
       "type": "string",
+      "maxLength": 2000,
       "description": "Post body text"
     },
     "likes": {

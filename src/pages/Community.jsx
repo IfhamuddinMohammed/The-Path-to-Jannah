@@ -12,6 +12,7 @@ import CommunitySidebar from "@/components/community/CommunitySidebar";
 import { postFilters } from "@/data/communityData";
 import { DuaRequest, CommunityPost } from "@/entities/all";
 import { useToast } from "@/components/ui/use-toast";
+import { markAsMine } from "@/lib/ownership";
 
 function isToday(dateString) {
   if (!dateString) return false;
@@ -57,6 +58,7 @@ export default function CommunityPage() {
   const addDuaRequest = async (dua) => {
     try {
       const created = await DuaRequest.create(dua);
+      markAsMine("dua_requests", created.id);
       setDuaRequests((prev) => [created, ...prev]);
     } catch (error) {
       console.error("Error posting dua request:", error);
@@ -72,8 +74,15 @@ export default function CommunityPage() {
     try {
       const created = await CommunityPost.create({ ...post, section: "discussions" });
       setPosts((prev) => [created, ...prev]);
+      return created;
     } catch (error) {
       console.error("Error posting discussion:", error);
+      toast({
+        variant: "destructive",
+        title: "Couldn't post your reflection",
+        description: "Please check your connection and try again.",
+      });
+      return null;
     }
   };
 
@@ -81,13 +90,24 @@ export default function CommunityPage() {
     try {
       const created = await CommunityPost.create({ ...post, section: "new_muslims" });
       setNewMuslimPosts((prev) => [created, ...prev]);
+      return created;
     } catch (error) {
       console.error("Error posting question:", error);
+      toast({
+        variant: "destructive",
+        title: "Couldn't post your question",
+        description: "Please check your connection and try again.",
+      });
+      return null;
     }
   };
 
   const handleAameenChange = (id, aameen_count) => {
     setDuaRequests((prev) => prev.map((d) => (d.id === id ? { ...d, aameen_count } : d)));
+  };
+
+  const handleDeleteDua = (id) => {
+    setDuaRequests((prev) => prev.filter((d) => d.id !== id));
   };
 
   const handleDiscussionLikeChange = (id, likes) => {
@@ -96,6 +116,22 @@ export default function CommunityPage() {
 
   const handleNewMuslimLikeChange = (id, likes) => {
     setNewMuslimPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes } : p)));
+  };
+
+  const handleDiscussionEdit = (id, patch) => {
+    setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  };
+
+  const handleDiscussionDelete = (id) => {
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleNewMuslimEdit = (id, patch) => {
+    setNewMuslimPosts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  };
+
+  const handleNewMuslimDelete = (id) => {
+    setNewMuslimPosts((prev) => prev.filter((p) => p.id !== id));
   };
 
   const visiblePosts = useMemo(() => {
@@ -171,7 +207,12 @@ export default function CommunityPage() {
                 ) : duaRequests.length > 0 ? (
                   <div className="grid sm:grid-cols-2 gap-4">
                     {duaRequests.map((dua) => (
-                      <DuaCard key={dua.id} dua={dua} onAameenChange={handleAameenChange} />
+                      <DuaCard
+                        key={dua.id}
+                        dua={dua}
+                        onAameenChange={handleAameenChange}
+                        onDelete={handleDeleteDua}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -212,6 +253,8 @@ export default function CommunityPage() {
                         key={post.id}
                         post={post}
                         onLikeChange={handleDiscussionLikeChange}
+                        onEdit={handleDiscussionEdit}
+                        onDelete={handleDiscussionDelete}
                       />
                     ))}
                   </div>
@@ -248,6 +291,8 @@ export default function CommunityPage() {
                         key={post.id}
                         post={post}
                         onLikeChange={handleNewMuslimLikeChange}
+                        onEdit={handleNewMuslimEdit}
+                        onDelete={handleNewMuslimDelete}
                       />
                     ))}
                   </div>

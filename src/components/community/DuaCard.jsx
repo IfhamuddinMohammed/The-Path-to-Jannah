@@ -4,10 +4,11 @@ import { formatDistanceToNow } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart } from "lucide-react";
+import { Heart, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DuaRequest } from "@/entities/all";
 import { useToast } from "@/components/ui/use-toast";
+import { isMine, unmarkAsMine } from "@/lib/ownership";
 import { hasAlreadySaidAmeen, setAlreadySaidAmeen } from "@/lib/ameenTracking";
 
 const CATEGORY_STYLES = {
@@ -18,17 +19,37 @@ const CATEGORY_STYLES = {
   General: "bg-muted text-muted-foreground border-border",
 };
 
-export default function DuaCard({ dua, onAameenChange }) {
+export default function DuaCard({ dua, onAameenChange, onDelete }) {
   const [aameenCount, setAameenCount] = useState(dua.aameen_count || 0);
   const [hasSaidAameen, setHasSaidAameen] = useState(() => hasAlreadySaidAmeen(dua.id));
   const [showBurst, setShowBurst] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
+  const isMineDua = isMine("dua_requests", dua.id);
   const posterLabel = dua.name || `Anonymous ${dua.gender === "sister" ? "Sister" : "Brother"}`;
   const timeAgo = dua.created_date
     ? formatDistanceToNow(new Date(dua.created_date), { addSuffix: true })
     : "Just now";
+
+  const handleDelete = async () => {
+    if (deleting || !window.confirm("Delete this dua request? This can't be undone.")) return;
+    setDeleting(true);
+    try {
+      await DuaRequest.delete(dua.id);
+      unmarkAsMine("dua_requests", dua.id);
+      onDelete?.(dua.id);
+    } catch (error) {
+      console.error("Error deleting dua request:", error);
+      toast({
+        variant: "destructive",
+        title: "Couldn't delete your dua request",
+        description: "Please check your connection and try again.",
+      });
+      setDeleting(false);
+    }
+  };
 
   const toggleAameen = async () => {
     if (saving) return;
@@ -69,9 +90,22 @@ export default function DuaCard({ dua, onAameenChange }) {
             <p className="text-sm font-medium text-foreground">{posterLabel}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{timeAgo}</p>
           </div>
-          <Badge variant="outline" className={cn("text-xs shrink-0", CATEGORY_STYLES[dua.category])}>
-            {dua.category}
-          </Badge>
+          <div className="flex items-center gap-1 shrink-0">
+            <Badge variant="outline" className={cn("text-xs", CATEGORY_STYLES[dua.category])}>
+              {dua.category}
+            </Badge>
+            {isMineDua && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-muted-foreground hover:text-destructive p-1"
+                aria-label="Delete dua request"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
         <p className="text-sm text-foreground/90 leading-relaxed">{dua.request}</p>

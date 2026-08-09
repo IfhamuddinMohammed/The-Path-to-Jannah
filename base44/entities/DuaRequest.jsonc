@@ -19,6 +19,7 @@
     },
     "request": {
       "type": "string",
+      "maxLength": 500,
       "description": "The dua request text"
     },
     "aameen_count": {

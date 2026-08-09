@@ -1,5 +1,9 @@
 export const duaCategories = ["Health", "Family", "Guidance", "Provision", "General"];
 
+export const POST_CONTENT_MAX_LENGTH = 2000;
+export const COMMENT_CONTENT_MAX_LENGTH = 500;
+export const DUA_REQUEST_MAX_LENGTH = 500;
+
 export const initialDuaRequests = [
   {
     id: "d1",

@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { duaCategories } from "@/data/communityData";
+import { duaCategories, DUA_REQUEST_MAX_LENGTH } from "@/data/communityData";
 
 const EMPTY_FORM = { name: "", anonymous: true, category: "General", request: "" };
 
@@ -33,7 +33,7 @@ export default function RequestDuaModal({ open, onOpenChange, onSubmit }) {
       name: form.anonymous ? null : form.name.trim() || null,
       gender: "brother",
       category: form.category,
-      request: form.request.trim(),
+      request: form.request.trim().slice(0, DUA_REQUEST_MAX_LENGTH),
     });
     setForm(EMPTY_FORM);
     onOpenChange(false);
@@ -68,6 +68,7 @@ export default function RequestDuaModal({ open, onOpenChange, onSubmit }) {
                 placeholder="e.g. Ahmed K."
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                maxLength={60}
               />
             </div>
           )}
@@ -97,8 +98,12 @@ export default function RequestDuaModal({ open, onOpenChange, onSubmit }) {
               placeholder="Share what you'd like the community to make dua for..."
               value={form.request}
               onChange={(e) => setForm((f) => ({ ...f, request: e.target.value }))}
+              maxLength={DUA_REQUEST_MAX_LENGTH}
               rows={4}
             />
+            <p className="text-xs text-muted-foreground text-right">
+              {form.request.length}/{DUA_REQUEST_MAX_LENGTH}
+            </p>
           </div>
         </div>
 
